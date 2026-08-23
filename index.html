@@ -537,14 +537,14 @@ function render(data) {
 
   document.getElementById('last-updated').textContent = sessions.length ? `Last session: ${sessions[sessions.length-1]}` : '';
 
-  const total# = data.length;
+  const totalShots = data.length;
   const avgSmash = avg(data.map(r => parseFloat(r.smash_factor)).filter(Boolean));
   const bestCarry = Math.max(...data.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean));
   const driverRows = data.filter(r => (r.club_full || '').toLowerCase().includes('driver'));
   const avgDriverCarry = driverRows.length ? Math.round(avg(driverRows.map(r => parseFloat(r.carry_distance_yards)))) : null;
 
   document.getElementById('kpi-row').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Total shots</div><div class="kpi-value">${total#}</div><div class="kpi-sub">${sessions.length} session${sessions.length!==1?'s':''}</div></div>
+    <div class="kpi"><div class="kpi-label">Total shots</div><div class="kpi-value">${totalShots}</div><div class="kpi-sub">${sessions.length} session${sessions.length!==1?'s':''}</div></div>
     <div class="kpi"><div class="kpi-label">Smash factor</div><div class="kpi-value">${avgSmash.toFixed(2)}</div><div class="kpi-sub">all clubs</div></div>
     <div class="kpi"><div class="kpi-label">Best carry</div><div class="kpi-value">${bestCarry}<span style="font-size:14px;color:var(--muted)"> yds</span></div><div class="kpi-sub">all time</div></div>
     ${avgDriverCarry ? `<div class="kpi"><div class="kpi-label">Driver avg carry</div><div class="kpi-value">${avgDriverCarry}<span style="font-size:14px;color:var(--muted)"> yds</span></div><div class="kpi-sub">${driverRows.length} shots</div></div>` : ''}
