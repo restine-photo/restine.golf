@@ -476,6 +476,23 @@ const COLORS = ['#6b8cff','#4ade9b','#f5a623','#ff6b6b','#a78bfa','#38bdf8','#fb
 let charts = {};
 let allData = [];
 
+const CLUB_ABBR = {
+  'Driver': 'Dr.',
+  '3 Wood': '3W',
+  '5 Wood': '5W',
+  '7 Wood': '7W',
+  '4 Iron': '4i',
+  '5 Iron': '5i',
+  '6 Iron': '6i',
+  '7 Iron': '7i',
+  '8 Iron': '8i',
+  '9 Iron': '9i',
+  'Pitching Wedge': 'PW',
+  'Approach Wedge': 'AW',
+  'Sand Wedge': 'SW',
+  'Lob Wedge': 'LW',
+};
+
 function smashBadge(v) {
   if (v >= 1.30) return `<span class="badge badge-good">${v.toFixed(2)}</span>`;
   if (v >= 1.20) return `<span class="badge badge-warn">${v.toFixed(2)}</span>`;
@@ -599,7 +616,7 @@ function render(data) {
     const estHcp12Gap = hcp12 ? estCarry - hcp12.carry : null;
     const estLpgaGap = lpga ? estCarry - lpga.carry : null;
 
-    return '<tr><td>' + s.club + '</td><td style="color:var(--muted)">' + s.count + '</td><td>' + s.avgCarry + ' yds</td><td>' + (s.avgTotal ? s.avgTotal + ' yds' : '<span style="color:var(--muted)">—</span>') + '</td><td>' + estCarryCell + '</td><td>' + estTotalCell + '</td><td>' + gapBadge(estHcp12Gap) + '</td><td>' + gapBadge(estCarryGap) + '</td><td>' + gapBadge(estLpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
+    return '<tr><td>' + (CLUB_ABBR[s.club] || s.club) + '</td><td style="color:var(--muted)">' + s.count + '</td><td>' + s.avgCarry + ' yds</td><td>' + (s.avgTotal ? s.avgTotal + ' yds' : '<span style="color:var(--muted)">—</span>') + '</td><td>' + estCarryCell + '</td><td>' + estTotalCell + '</td><td>' + gapBadge(estHcp12Gap) + '</td><td>' + gapBadge(estCarryGap) + '</td><td>' + gapBadge(estLpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
   }).join('');
 
   const chartDefaults = {
