@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golf Stats Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0efec;
+    --muted: #7a7d8e;
+    --accent: #4ade9b;
+    --accent2: #6b8cff;
+    --danger: #ff6b6b;
+    --amber: #f5a623;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+    --font-sans: 'Inter', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  a { color: var(--accent2); text-decoration: none; }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  header h1 {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+
+  header span {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  #sheet-config {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  #sheet-config input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    width: 320px;
+    max-width: 100%;
+  }
+
+  #sheet-config input:focus {
+    outline: none;
+    border-color: var(--accent2);
+  }
+
+  #sheet-config button {
+    background: var(--accent2);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    white-space: nowrap;
+  }
+
+  #sheet-config button:hover { opacity: 0.85; }
+
+  #status {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+
+  main {
+    padding: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  #setup-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  #setup-banner strong { color: var(--text); }
+  #setup-banner code {
+    background: var(--surface2);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+  }
+
+  .kpi-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+    font-family: var(--font-mono);
+  }
+
+  .kpi-value {
+    font-size: 28px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 1rem;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+  }
+
+  .card-title {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .chart-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  .club-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .club-table th {
+    text-align: left;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  .club-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  .club-table tr:last-child td { border-bottom: none; }
+
+  .club-table td:first-child { color: var(--accent2); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+
+  .badge-good { background: rgba(74,222,155,0.12); color: var(--accent); }
+  .badge-warn { background: rgba(245,166,35,0.12); color: var(--amber); }
+  .badge-bad  { background: rgba(255,107,107,0.12); color: var(--danger); }
+
+  .session-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .session-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--surface2);
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+  }
+
+  .session-date { color: var(--muted); }
+  .session-shots { color: var(--accent2); }
+
+  #loading {
+    text-align: center;
+    padding: 4rem;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  #error-msg {
+    display: none;
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.2);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    color: var(--danger);
+    font-size: 13px;
+    margin-bottom: 1.5rem;
+  }
+
+  #content { display: none; }
+
+  .insight-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .insight {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .insight-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 600px) {
+    header { padding: 1rem; }
+    main { padding: 1rem; }
+    #sheet-config input { width: 100%; }
+    .kpi-value { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⛳ golf.stats</h1>
+  <span id="last-updated"></span>
+  <div id="sheet-config">
+    <button onclick="loadFromSheet()" id="refresh-btn" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--muted);">↻ Refresh</button>
+    <span id="status"></span>
+  </div>
+</header>
+
+<main>
+
+  <div id="error-msg"></div>
+  <div id="loading" style="display:none">Loading your data…</div>
+
+  <div id="content">
+    <div class="kpi-row" id="kpi-row"></div>
+
+    <p class="section-label">Club averages</p>
+    <div class="card" style="margin-bottom: 2rem; overflow-x: auto;">
+      <table class="club-table" id="club-table">
+        <thead>
+          <tr>
+            <th>Club</th>
+            <th>Shots</th>
+            <th>Avg carry</th>
+            <th>Max carry</th>
+            <th>Spread</th>
+            <th>Avg smash</th>
+            <th>Contact</th>
+          </tr>
+        </thead>
+        <tbody id="club-table-body"></tbody>
+      </table>
+    </div>
+
+    <p class="section-label">Carry distance by club</p>
+    <div class="card" style="margin-bottom: 2rem;">
+      <div class="chart-wrap" style="height: 280px;">
+        <canvas id="carry-chart" role="img" aria-label="Average carry distance per club"></canvas>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <p class="card-title">Smash factor by club</p>
+        <div class="chart-wrap" style="height: 220px;">
+          <canvas id="smash-chart" role="img" aria-label="Average smash factor per club"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <p class="card-title">Club speed by club</p>
+        <div class="chart-wrap" style="height: 220px;">
+          <canvas id="speed-chart" role="img" aria-label="Average club speed per club"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <p class="section-label">Carry trend over sessions</p>
+    <div class="card" style="margin-bottom: 2rem;">
+      <div style="display:flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem;" id="trend-legend"></div>
+      <div class="chart-wrap" style="height: 240px;">
+        <canvas id="trend-chart" role="img" aria-label="Carry distance trend over time by club"></canvas>
+      </div>
+    </div>
+
+    <p class="section-label">Consistency (carry spread per club)</p>
+    <div class="card" style="margin-bottom: 2rem;">
+      <div class="chart-wrap" style="height: 220px;">
+        <canvas id="spread-chart" role="img" aria-label="Carry distance spread (max minus min) per club — tighter is better"></canvas>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <p class="card-title">Key insights</p>
+        <div class="insight-list" id="insights"></div>
+      </div>
+      <div class="card">
+        <p class="card-title">Sessions</p>
+        <div class="session-list" id="session-list"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTRuocabCItya4B1K6wramdLmviqHZ8Um6mw6wKM7kNvAA0wi97VNZlqPfBmxwBiorbHyd8HOAwQ9a-/pub?output=csv";
+const CLUB_ORDER = ['Dr','3w','5w','7w','4i','5i','6i','7i','8i','9i','Pw','Aw','Sw','Lw'];
+const COLORS = ['#6b8cff','#4ade9b','#f5a623','#ff6b6b','#a78bfa','#38bdf8','#fb7185','#34d399','#fbbf24','#60a5fa'];
+
+let charts = {};
+let allData = [];
+
+function smashBadge(v) {
+  if (v >= 1.30) return `<span class="badge badge-good">${v.toFixed(2)}</span>`;
+  if (v >= 1.20) return `<span class="badge badge-warn">${v.toFixed(2)}</span>`;
+  return `<span class="badge badge-bad">${v.toFixed(2)}</span>`;
+}
+
+function spreadBadge(v) {
+  if (v <= 15) return `<span class="badge badge-good">${v} yds</span>`;
+  if (v <= 25) return `<span class="badge badge-warn">${v} yds</span>`;
+  return `<span class="badge badge-bad">${v} yds</span>`;
+}
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).filter(l => l.trim()).map(line => {
+    const vals = line.match(/(".*?"|[^,]+|(?<=,)(?=,)|^(?=,)|(?<=,)$)/g) || line.split(',');
+    const obj = {};
+    headers.forEach((h, i) => {
+      obj[h] = (vals[i] || '').replace(/^"|"$/g,'').trim();
+    });
+    return obj;
+  });
+}
+
+function groupByClub(data) {
+  const groups = {};
+  data.forEach(row => {
+    const club = row.club_full || row.club;
+    if (!club) return;
+    if (!groups[club]) groups[club] = [];
+    groups[club].push(row);
+  });
+  return groups;
+}
+
+function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+
+function clubKey(club) {
+  const map = {'Driver':'Dr','3 Wood':'3w','5 Wood':'5w','7 Wood':'7w','4 Iron':'4i','5 Iron':'5i','6 Iron':'6i','7 Iron':'7i','8 Iron':'8i','9 Iron':'9i','Pitching Wedge':'Pw','Approach Wedge':'Aw','Sand Wedge':'Sw','Lob Wedge':'Lw'};
+  return map[club] || club;
+}
+
+function render(data) {
+  allData = data;
+  const byClub = groupByClub(data);
+
+  const clubs = Object.keys(byClub).sort((a,b) => {
+    const ai = CLUB_ORDER.indexOf(clubKey(a));
+    const bi = CLUB_ORDER.indexOf(clubKey(b));
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+
+  const sessions = [...new Set(data.map(r => r.session_date))].sort();
+
+  document.getElementById('last-updated').textContent = sessions.length ? `Last session: ${sessions[sessions.length-1]}` : '';
+
+  const totalShots = data.length;
+  const avgSmash = avg(data.map(r => parseFloat(r.smash_factor)).filter(Boolean));
+  const bestCarry = Math.max(...data.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean));
+  const driverRows = data.filter(r => (r.club_full || '').toLowerCase().includes('driver'));
+  const avgDriverCarry = driverRows.length ? Math.round(avg(driverRows.map(r => parseFloat(r.carry_distance_yards)))) : null;
+
+  document.getElementById('kpi-row').innerHTML = `
+    <div class="kpi"><div class="kpi-label">Total shots</div><div class="kpi-value">${totalShots}</div><div class="kpi-sub">${sessions.length} session${sessions.length!==1?'s':''}</div></div>
+    <div class="kpi"><div class="kpi-label">Avg smash factor</div><div class="kpi-value">${avgSmash.toFixed(2)}</div><div class="kpi-sub">all clubs</div></div>
+    <div class="kpi"><div class="kpi-label">Best carry</div><div class="kpi-value">${bestCarry}<span style="font-size:14px;color:var(--muted)"> yds</span></div><div class="kpi-sub">all time</div></div>
+    ${avgDriverCarry ? `<div class="kpi"><div class="kpi-label">Driver avg carry</div><div class="kpi-value">${avgDriverCarry}<span style="font-size:14px;color:var(--muted)"> yds</span></div><div class="kpi-sub">${driverRows.length} shots</div></div>` : ''}
+  `;
+
+  const clubStats = clubs.map(club => {
+    const rows = byClub[club];
+    const carries = rows.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean);
+    const speeds = rows.map(r => parseFloat(r.club_speed_mph)).filter(Boolean);
+    const smashes = rows.map(r => parseFloat(r.smash_factor)).filter(Boolean);
+    return {
+      club, count: rows.length,
+      avgCarry: Math.round(avg(carries)),
+      maxCarry: Math.max(...carries),
+      minCarry: Math.min(...carries),
+      spread: Math.round(Math.max(...carries) - Math.min(...carries)),
+      avgSpeed: Math.round(avg(speeds)),
+      avgSmash: avg(smashes)
+    };
+  });
+
+  document.getElementById('club-table-body').innerHTML = clubStats.map(s => `
+    <tr>
+      <td>${s.club}</td>
+      <td style="color:var(--muted)">${s.count}</td>
+      <td>${s.avgCarry} yds</td>
+      <td>${s.maxCarry} yds</td>
+      <td>${spreadBadge(s.spread)}</td>
+      <td>${smashBadge(s.avgSmash)}</td>
+      <td><div style="width:${Math.min(s.avgSmash/1.5*100,100).toFixed(0)}%;height:4px;background:var(--accent);border-radius:2px;opacity:0.6"></div></td>
+    </tr>
+  `).join('');
+
+  const chartDefaults = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#7a7d8e', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+      y: { ticks: { color: '#7a7d8e', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+    }
+  };
+
+  destroyChart('carry');
+  charts['carry'] = new Chart(document.getElementById('carry-chart'), {
+    type: 'bar',
+    data: {
+      labels: clubStats.map(s => s.club),
+      datasets: [{
+        data: clubStats.map(s => s.avgCarry),
+        backgroundColor: clubStats.map((_,i) => COLORS[i % COLORS.length] + 'cc'),
+        borderRadius: 4, borderSkipped: false,
+        label: 'Avg carry'
+      }]
+    },
+    options: { ...chartDefaults, plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} yds avg carry` } } } }
+  });
+
+  destroyChart('smash');
+  charts['smash'] = new Chart(document.getElementById('smash-chart'), {
+    type: 'bar',
+    data: {
+      labels: clubStats.map(s => s.club),
+      datasets: [{
+        data: clubStats.map(s => parseFloat(s.avgSmash.toFixed(2))),
+        backgroundColor: clubStats.map(s => s.avgSmash >= 1.30 ? '#4ade9bcc' : s.avgSmash >= 1.20 ? '#f5a623cc' : '#ff6b6bcc'),
+        borderRadius: 4, borderSkipped: false,
+        label: 'Avg smash'
+      }]
+    },
+    options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 1.0, max: 1.5 } }, plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(2)} smash factor` } } } }
+  });
+
+  destroyChart('speed');
+  charts['speed'] = new Chart(document.getElementById('speed-chart'), {
+    type: 'bar',
+    data: {
+      labels: clubStats.map(s => s.club),
+      datasets: [{
+        data: clubStats.map(s => s.avgSpeed),
+        backgroundColor: '#6b8cffcc',
+        borderRadius: 4, borderSkipped: false,
+        label: 'Avg club speed'
+      }]
+    },
+    options: { ...chartDefaults, plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} mph` } } } }
+  });
+
+  destroyChart('spread');
+  charts['spread'] = new Chart(document.getElementById('spread-chart'), {
+    type: 'bar',
+    data: {
+      labels: clubStats.map(s => s.club),
+      datasets: [{
+        data: clubStats.map(s => s.spread),
+        backgroundColor: clubStats.map(s => s.spread <= 15 ? '#4ade9bcc' : s.spread <= 25 ? '#f5a623cc' : '#ff6b6bcc'),
+        borderRadius: 4, borderSkipped: false,
+        label: 'Carry spread'
+      }]
+    },
+    options: { ...chartDefaults, plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} yd spread (tighter = better)` } } } }
+  });
+
+  if (sessions.length > 1) {
+    const trendDatasets = clubs.slice(0,6).map((club, i) => {
+      return {
+        label: club,
+        data: sessions.map(date => {
+          const rows = data.filter(r => r.session_date === date && r.club_full === club);
+          const carries = rows.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean);
+          return carries.length ? Math.round(avg(carries)) : null;
+        }),
+        borderColor: COLORS[i % COLORS.length],
+        backgroundColor: COLORS[i % COLORS.length] + '20',
+        tension: 0.3, pointRadius: 4, borderWidth: 2, spanGaps: true
+      };
+    });
+
+    document.getElementById('trend-legend').innerHTML = trendDatasets.map(d =>
+      `<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);font-family:var(--font-mono)"><span style="width:10px;height:10px;border-radius:2px;background:${d.borderColor};display:inline-block"></span>${d.label}</span>`
+    ).join('');
+
+    destroyChart('trend');
+    charts['trend'] = new Chart(document.getElementById('trend-chart'), {
+      type: 'line',
+      data: { labels: sessions, datasets: trendDatasets },
+      options: { ...chartDefaults, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} yds` } } } }
+    });
+  } else {
+    document.getElementById('trend-chart').closest('.card').innerHTML = '<p style="color:var(--muted);font-size:13px;padding:1rem;text-align:center">Trend charts appear after 2+ sessions</p>';
+  }
+
+  const insights = [];
+  const pwStats = clubStats.find(s => s.club.toLowerCase().includes('pitching') || s.club === 'Pw');
+  const driverStats = clubStats.find(s => s.club.toLowerCase().includes('driver') || s.club === 'Dr');
+  const iron7Stats = clubStats.find(s => s.club.toLowerCase().includes('7 iron') || s.club === '7i');
+
+  if (pwStats && pwStats.spread > 25) insights.push({ color: '#ff6b6b', text: `PW carry spread is ${pwStats.spread} yds — high variance suggests inconsistent contact. Focus on ball position and tempo.` });
+  if (iron7Stats && iron7Stats.avgSmash >= 1.25) insights.push({ color: '#4ade9b', text: `7 iron smash factor averaging ${iron7Stats.avgSmash.toFixed(2)} — solid contact quality with the P790s.` });
+  if (driverStats && driverStats.spread > 30) insights.push({ color: '#f5a623', text: `Driver carry spread of ${driverStats.spread} yds. One session is small — watch this over more rounds.` });
+  clubStats.forEach(s => {
+    if (s.avgSmash < 1.10 && s.count >= 5) insights.push({ color: '#ff6b6b', text: `${s.club} smash factor ${s.avgSmash.toFixed(2)} — below 1.10 suggests off-center contact or tempo issues.` });
+  });
+  if (sessions.length >= 3) insights.push({ color: '#6b8cff', text: `${sessions.length} sessions logged. Trend charts are now active — look for upward carry trends as your index drops.` });
+  if (insights.length === 0) insights.push({ color: '#6b8cff', text: 'Add more sessions to unlock pattern insights across your bag.' });
+
+  document.getElementById('insights').innerHTML = insights.slice(0,5).map(ins =>
+    `<div class="insight"><div class="insight-dot" style="background:${ins.color}"></div><span style="color:var(--muted)">${ins.text}</span></div>`
+  ).join('');
+
+  document.getElementById('session-list').innerHTML = sessions.slice().reverse().slice(0,8).map(date => {
+    const shots = data.filter(r => r.session_date === date).length;
+    const clubs = [...new Set(data.filter(r => r.session_date === date).map(r => r.club_full || r.club))];
+    return `<div class="session-row"><span class="session-date">${date}</span><span class="session-shots">${shots} shots · ${clubs.length} clubs</span></div>`;
+  }).join('');
+
+  document.getElementById('content').style.display = 'block';
+}
+
+async function loadFromSheet() {
+  const url = SHEET_URL;
+  document.getElementById('status').textContent = 'loading…';
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('content').style.display = 'none';
+  document.getElementById('error-msg').style.display = 'none';
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const text = await resp.text();
+    const data = parseCSV(text);
+    if (!data.length || !data[0].carry_distance_yards) throw new Error('CSV missing expected columns. Check your sheet format.');
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('status').textContent = `✓ ${data.length} shots loaded`;
+    render(data);
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('status').textContent = '';
+    const err = document.getElementById('error-msg');
+    err.style.display = 'block';
+    err.textContent = `Error loading data: ${e.message}`;
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadFromSheet();
+});
+</script>
+</body>
+</html>
