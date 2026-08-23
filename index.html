@@ -221,6 +221,7 @@
     padding: 6px 8px;
     border-bottom: 1px solid var(--border);
     font-weight: 400;
+    white-space: nowrap;
   }
 
   .club-table td {
@@ -338,17 +339,17 @@
         <thead>
           <tr>
             <th>Club</th>
-            <th>Shots</th>
-            <th>Avg carry</th>
-            <th>Avg total dist</th>
-            <th>est. carry (premium ball)</th>
-            <th>est. total dist (premium ball)</th>
-            <th>vs 12 hdcp</th>
-            <th>vs scratch</th>
-            <th>vs LPGA</th>
-            <th>Spread</th>
-            <th>Avg smash</th>
-            <th>vs scratch</th>
+            <th>#</th>
+            <th>Carry</th>
+            <th>Total</th>
+            <th>Est. carry</th>
+            <th>Est. total</th>
+            <th>vs 12i</th>
+            <th>vs SCR</th>
+            <th>LPGA</th>
+            <th>Sprd</th>
+            <th>Smash</th>
+            <th>vs SCR</th>
           </tr>
         </thead>
         <tbody id="club-table-body"></tbody>
@@ -536,15 +537,15 @@ function render(data) {
 
   document.getElementById('last-updated').textContent = sessions.length ? `Last session: ${sessions[sessions.length-1]}` : '';
 
-  const totalShots = data.length;
+  const total# = data.length;
   const avgSmash = avg(data.map(r => parseFloat(r.smash_factor)).filter(Boolean));
   const bestCarry = Math.max(...data.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean));
   const driverRows = data.filter(r => (r.club_full || '').toLowerCase().includes('driver'));
   const avgDriverCarry = driverRows.length ? Math.round(avg(driverRows.map(r => parseFloat(r.carry_distance_yards)))) : null;
 
   document.getElementById('kpi-row').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Total shots</div><div class="kpi-value">${totalShots}</div><div class="kpi-sub">${sessions.length} session${sessions.length!==1?'s':''}</div></div>
-    <div class="kpi"><div class="kpi-label">Avg smash factor</div><div class="kpi-value">${avgSmash.toFixed(2)}</div><div class="kpi-sub">all clubs</div></div>
+    <div class="kpi"><div class="kpi-label">Total shots</div><div class="kpi-value">${total#}</div><div class="kpi-sub">${sessions.length} session${sessions.length!==1?'s':''}</div></div>
+    <div class="kpi"><div class="kpi-label">Smash factor</div><div class="kpi-value">${avgSmash.toFixed(2)}</div><div class="kpi-sub">all clubs</div></div>
     <div class="kpi"><div class="kpi-label">Best carry</div><div class="kpi-value">${bestCarry}<span style="font-size:14px;color:var(--muted)"> yds</span></div><div class="kpi-sub">all time</div></div>
     ${avgDriverCarry ? `<div class="kpi"><div class="kpi-label">Driver avg carry</div><div class="kpi-value">${avgDriverCarry}<span style="font-size:14px;color:var(--muted)"> yds</span></div><div class="kpi-sub">${driverRows.length} shots</div></div>` : ''}
   `;
@@ -619,7 +620,7 @@ function render(data) {
         data: clubStats.map(s => s.avgCarry),
         backgroundColor: clubStats.map((_,i) => COLORS[i % COLORS.length] + 'cc'),
         borderRadius: 4, borderSkipped: false,
-        label: 'Avg carry'
+        label: 'Carry'
       }]
     },
     options: { ...chartDefaults, plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} yds avg carry` } } } }
@@ -634,7 +635,7 @@ function render(data) {
         data: clubStats.map(s => parseFloat(s.avgSmash.toFixed(2))),
         backgroundColor: clubStats.map(s => s.avgSmash >= 1.30 ? '#4ade9bcc' : s.avgSmash >= 1.20 ? '#f5a623cc' : '#ff6b6bcc'),
         borderRadius: 4, borderSkipped: false,
-        label: 'Avg smash'
+        label: 'Smash'
       }]
     },
     options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 1.0, max: 1.5 } }, plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(2)} smash factor` } } } }
@@ -702,7 +703,7 @@ function render(data) {
     }
   }
 
-  // Gap vs scratch female benchmark chart
+  // Gap vs SCR female benchmark chart
   const gapClubs = clubStats.filter(s => SCRATCH_F_BENCHMARKS[s.club]);
   const gapValues = gapClubs.map(s => s.avgCarry - SCRATCH_F_BENCHMARKS[s.club].carry);
 
