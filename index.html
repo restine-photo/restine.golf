@@ -340,10 +340,11 @@
             <th>Club</th>
             <th>Shots</th>
             <th>Avg carry</th>
-            <th>Max carry</th>
+            <th>vs scratch ♀</th>
+            <th>vs LPGA</th>
             <th>Spread</th>
             <th>Avg smash</th>
-            <th>Contact</th>
+            <th>vs scratch ♀</th>
           </tr>
         </thead>
         <tbody id="club-table-body"></tbody>
@@ -387,6 +388,15 @@
       </div>
     </div>
 
+    <p class="section-label">Gap vs female scratch (0 hdcp) — carry distance</p>
+    <div class="card" style="margin-bottom: 0.5rem;">
+      <p style="font-size:11px;color:var(--muted);margin-bottom:1rem">Green = ahead of benchmark · Red = behind · Based on Shot Scope 2026 female scratch data</p>
+      <div class="chart-wrap" style="height: 240px;">
+        <canvas id="gap-chart" role="img" aria-label="Your carry distance gap versus female scratch golfer benchmarks per club"></canvas>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:2rem;padding:0 0.25rem">LPGA Tour pro averages shown for reference only — scratch amateur is the actionable benchmark.</p>
+
     <div class="grid-2">
       <div class="card">
         <p class="card-title">Key insights</p>
@@ -403,6 +413,39 @@
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTRuocabCItya4B1K6wramdLmviqHZ8Um6mw6wKM7kNvAA0wi97VNZlqPfBmxwBiorbHyd8HOAwQ9a-/pub?output=csv";
 const CLUB_ORDER = ['Dr','3w','5w','7w','4i','5i','6i','7i','8i','9i','Pw','Aw','Sw','Lw'];
+
+// Female scratch (0 handicap) carry benchmarks — Shot Scope 2026 / Trackman data
+// Source: Shot Scope 2026 women's data, MyGolfSpy, Golf Monthly
+const SCRATCH_F_BENCHMARKS = {
+  'Driver':          { carry: 210, speed: 88,  smash: 1.38 },
+  '3 Wood':          { carry: 175, speed: 80,  smash: 1.30 },
+  '5 Wood':          { carry: 162, speed: 78,  smash: 1.28 },
+  '7 Wood':          { carry: 148, speed: 75,  smash: 1.26 },
+  '4 Iron':          { carry: 145, speed: 76,  smash: 1.28 },
+  '5 Iron':          { carry: 138, speed: 75,  smash: 1.28 },
+  '6 Iron':          { carry: 130, speed: 74,  smash: 1.27 },
+  '7 Iron':          { carry: 148, speed: 73,  smash: 1.30 },
+  '8 Iron':          { carry: 135, speed: 71,  smash: 1.28 },
+  '9 Iron':          { carry: 122, speed: 69,  smash: 1.26 },
+  'Pitching Wedge':  { carry: 105, speed: 67,  smash: 1.22 },
+  'Approach Wedge':  { carry: 92,  speed: 64,  smash: 1.18 },
+  'Sand Wedge':      { carry: 80,  speed: 60,  smash: 1.15 },
+  'Lob Wedge':       { carry: 65,  speed: 55,  smash: 1.10 },
+};
+
+// LPGA Tour pro carry benchmarks for reference (Trackman 2024)
+const LPGA_BENCHMARKS = {
+  'Driver':          { carry: 223 },
+  '3 Wood':          { carry: 200 },
+  '5 Wood':          { carry: 189 },
+  '7 Wood':          { carry: 178 },
+  '5 Iron':          { carry: 161 },
+  '6 Iron':          { carry: 152 },
+  '7 Iron':          { carry: 143 },
+  '8 Iron':          { carry: 133 },
+  '9 Iron':          { carry: 123 },
+  'Pitching Wedge':  { carry: 110 },
+};
 const COLORS = ['#6b8cff','#4ade9b','#f5a623','#ff6b6b','#a78bfa','#38bdf8','#fb7185','#34d399','#fbbf24','#60a5fa'];
 
 let charts = {};
@@ -498,17 +541,26 @@ function render(data) {
     };
   });
 
-  document.getElementById('club-table-body').innerHTML = clubStats.map(s => `
-    <tr>
-      <td>${s.club}</td>
-      <td style="color:var(--muted)">${s.count}</td>
-      <td>${s.avgCarry} yds</td>
-      <td>${s.maxCarry} yds</td>
-      <td>${spreadBadge(s.spread)}</td>
-      <td>${smashBadge(s.avgSmash)}</td>
-      <td><div style="width:${Math.min(s.avgSmash/1.5*100,100).toFixed(0)}%;height:4px;background:var(--accent);border-radius:2px;opacity:0.6"></div></td>
-    </tr>
-  `).join('');
+  document.getElementById('club-table-body').innerHTML = clubStats.map(s => {
+    const bench = SCRATCH_F_BENCHMARKS[s.club];
+    const lpga = LPGA_BENCHMARKS[s.club];
+    const carryGap = bench ? s.avgCarry - bench.carry : null;
+    const lpgaGap = lpga ? s.avgCarry - lpga.carry : null;
+    const smashGap = bench ? s.avgSmash - bench.smash : null;
+    const gapBadge = (gap) => {
+      if (gap === null) return '<span style="color:var(--muted)">—</span>';
+      const sign = gap >= 0 ? '+' : '';
+      const color = gap >= -5 && gap <= 5 ? 'var(--amber)' : gap > 5 ? 'var(--accent)' : 'var(--danger)';
+      return '<span style="color:' + color + ';font-family:var(--font-mono);font-size:12px">' + sign + Math.round(gap) + ' yds</span>';
+    };
+    const smashGapBadge = (gap) => {
+      if (gap === null) return '<span style="color:var(--muted)">—</span>';
+      const sign = gap >= 0 ? '+' : '';
+      const color = gap >= 0 ? 'var(--accent)' : 'var(--danger)';
+      return '<span style="color:' + color + ';font-family:var(--font-mono);font-size:12px">' + sign + gap.toFixed(2) + '</span>';
+    };
+    return '<tr><td>' + s.club + '</td><td style="color:var(--muted)">' + s.count + '</td><td>' + s.avgCarry + ' yds</td><td>' + gapBadge(carryGap) + '</td><td>' + gapBadge(lpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
+  }).join('');
 
   const chartDefaults = {
     responsive: true, maintainAspectRatio: false,
@@ -608,19 +660,61 @@ function render(data) {
     document.getElementById('trend-chart').closest('.card').innerHTML = '<p style="color:var(--muted);font-size:13px;padding:1rem;text-align:center">Trend charts appear after 2+ sessions</p>';
   }
 
+  // Gap vs scratch female benchmark chart
+  const gapClubs = clubStats.filter(s => SCRATCH_F_BENCHMARKS[s.club]);
+  const gapValues = gapClubs.map(s => s.avgCarry - SCRATCH_F_BENCHMARKS[s.club].carry);
+
+  destroyChart('gap');
+  charts['gap'] = new Chart(document.getElementById('gap-chart'), {
+    type: 'bar',
+    data: {
+      labels: gapClubs.map(s => s.club),
+      datasets: [{
+        data: gapValues,
+        backgroundColor: gapValues.map(v => v >= 0 ? '#4ade9bcc' : '#ff6b6bcc'),
+        borderRadius: 4, borderSkipped: false,
+        label: 'Gap vs female scratch carry'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => {
+        const v = ctx.parsed.y;
+        const sign = v >= 0 ? '+' : '';
+        return ` ${sign}${Math.round(v)} yds vs female scratch`;
+      }}}},
+      scales: {
+        x: { ticks: { color: '#7a7d8e', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color: '#7a7d8e', font: { size: 11 }, callback: v => (v >= 0 ? '+' : '') + v + ' y' }, grid: { color: 'rgba(255,255,255,0.05)' }, border: { dash: [4,4] } }
+      }
+    }
+  });
+
   const insights = [];
   const pwStats = clubStats.find(s => s.club.toLowerCase().includes('pitching') || s.club === 'Pw');
   const driverStats = clubStats.find(s => s.club.toLowerCase().includes('driver') || s.club === 'Dr');
   const iron7Stats = clubStats.find(s => s.club.toLowerCase().includes('7 iron') || s.club === '7i');
 
-  if (pwStats && pwStats.spread > 25) insights.push({ color: '#ff6b6b', text: `PW carry spread is ${pwStats.spread} yds — high variance suggests inconsistent contact. Focus on ball position and tempo.` });
-  if (iron7Stats && iron7Stats.avgSmash >= 1.25) insights.push({ color: '#4ade9b', text: `7 iron smash factor averaging ${iron7Stats.avgSmash.toFixed(2)} — solid contact quality with the P790s.` });
-  if (driverStats && driverStats.spread > 30) insights.push({ color: '#f5a623', text: `Driver carry spread of ${driverStats.spread} yds. One session is small — watch this over more rounds.` });
+  // Benchmark-aware insights
   clubStats.forEach(s => {
-    if (s.avgSmash < 1.10 && s.count >= 5) insights.push({ color: '#ff6b6b', text: `${s.club} smash factor ${s.avgSmash.toFixed(2)} — below 1.10 suggests off-center contact or tempo issues.` });
+    const bench = SCRATCH_F_BENCHMARKS[s.club];
+    if (!bench || s.count < 3) return;
+    const carryGap = s.avgCarry - bench.carry;
+    const smashGap = s.avgSmash - bench.smash;
+    if (carryGap >= 0) {
+      insights.push({ color: '#4ade9b', text: s.club + ' carry is +' + Math.abs(Math.round(carryGap)) + ' yds ahead of female scratch benchmark (' + bench.carry + ' yds). Strong.' });
+    } else if (carryGap >= -15) {
+      insights.push({ color: '#f5a623', text: s.club + ' carry is ' + Math.round(carryGap) + ' yds off female scratch (' + bench.carry + ' yds target). Closeable gap.' });
+    } else {
+      insights.push({ color: '#ff6b6b', text: s.club + ' carry is ' + Math.round(carryGap) + ' yds behind female scratch (' + bench.carry + ' yds target). Distance is the priority here.' });
+    }
+    if (smashGap < -0.08) {
+      insights.push({ color: '#ff6b6b', text: s.club + ' smash factor ' + s.avgSmash.toFixed(2) + ' is ' + smashGap.toFixed(2) + ' below scratch benchmark — contact quality is costing you carry.' });
+    }
   });
-  if (sessions.length >= 3) insights.push({ color: '#6b8cff', text: `${sessions.length} sessions logged. Trend charts are now active — look for upward carry trends as your index drops.` });
-  if (insights.length === 0) insights.push({ color: '#6b8cff', text: 'Add more sessions to unlock pattern insights across your bag.' });
+  if (pwStats && pwStats.spread > 25) insights.push({ color: '#ff6b6b', text: 'PW carry spread is ' + pwStats.spread + ' yds — the biggest consistency gap in your bag. Closing this is a scoring priority.' });
+  if (sessions.length >= 3) insights.push({ color: '#6b8cff', text: sessions.length + ' sessions logged. Trend charts are active — watch carry gaps narrow as your index drops.' });
+  if (insights.length === 0) insights.push({ color: '#6b8cff', text: 'Add more sessions to unlock benchmark insights across your bag.' });
 
   document.getElementById('insights').innerHTML = insights.slice(0,5).map(ins =>
     `<div class="insight"><div class="insight-dot" style="background:${ins.color}"></div><span style="color:var(--muted)">${ins.text}</span></div>`
