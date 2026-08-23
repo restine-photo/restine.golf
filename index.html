@@ -340,6 +340,8 @@
             <th>Club</th>
             <th>Shots</th>
             <th>Avg carry</th>
+            <th>Avg total dist</th>
+            <th>est. carry (Kirkland)</th>
             <th>vs 12 hdcp</th>
             <th>vs scratch</th>
             <th>vs LPGA</th>
@@ -351,6 +353,8 @@
         <tbody id="club-table-body"></tbody>
       </table>
     </div>
+
+    <p style="font-size:11px;color:var(--muted);margin:-1.5rem 0 1.5rem;padding:0 0.25rem">Raw carry = range ball data. Est. carry (Kirkland) = +11% adjustment for premium ball on course. Benchmark gaps use estimated carry.</p>
 
     <p class="section-label">Carry distance by club</p>
     <div class="card" style="margin-bottom: 2rem;">
@@ -549,9 +553,11 @@ function render(data) {
     const carries = rows.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean);
     const speeds = rows.map(r => parseFloat(r.club_speed_mph)).filter(Boolean);
     const smashes = rows.map(r => parseFloat(r.smash_factor)).filter(Boolean);
+    const totals = rows.map(r => parseFloat(r.total_distance_yards)).filter(Boolean);
     return {
       club, count: rows.length,
       avgCarry: Math.round(avg(carries)),
+      avgTotal: totals.length ? Math.round(avg(totals)) : null,
       maxCarry: Math.max(...carries),
       minCarry: Math.min(...carries),
       spread: Math.round(Math.max(...carries) - Math.min(...carries)),
@@ -580,7 +586,16 @@ function render(data) {
       const color = gap >= 0 ? 'var(--accent)' : 'var(--danger)';
       return '<span style="color:' + color + ';font-family:var(--font-mono);font-size:12px">' + sign + gap.toFixed(2) + '</span>';
     };
-    return '<tr><td>' + s.club + '</td><td style="color:var(--muted)">' + s.count + '</td><td>' + s.avgCarry + ' yds</td><td>' + gapBadge(hcp12Gap) + '</td><td>' + gapBadge(carryGap) + '</td><td>' + gapBadge(lpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
+        const RANGE_BALL_FACTOR = 1.11; // ~11% adjustment for range ball vs Kirkland/premium ball
+    const estCarry = Math.round(s.avgCarry * RANGE_BALL_FACTOR);
+    const estCarryCell = '<span style="color:var(--accent2);font-family:var(--font-mono);font-size:12px">~' + estCarry + ' yds</span>';
+
+    // Recalculate gaps using estimated carry for the benchmark columns
+    const estCarryGap = bench ? estCarry - bench.carry : null;
+    const estHcp12Gap = hcp12 ? estCarry - hcp12.carry : null;
+    const estLpgaGap = lpga ? estCarry - lpga.carry : null;
+
+    return '<tr><td>' + s.club + '</td><td style="color:var(--muted)">' + s.count + '</td><td>' + s.avgCarry + ' yds</td><td>' + (s.avgTotal ? s.avgTotal + ' yds' : '<span style="color:var(--muted)">—</span>') + '</td><td>' + estCarryCell + '</td><td>' + gapBadge(estHcp12Gap) + '</td><td>' + gapBadge(estCarryGap) + '</td><td>' + gapBadge(estLpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
   }).join('');
 
   const chartDefaults = {
