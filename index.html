@@ -340,11 +340,12 @@
             <th>Club</th>
             <th>Shots</th>
             <th>Avg carry</th>
-            <th>vs scratch ♀</th>
+            <th>vs scratch</th>
+            <th>vs 12 hdcp</th>
             <th>vs LPGA</th>
             <th>Spread</th>
             <th>Avg smash</th>
-            <th>vs scratch ♀</th>
+            <th>vs scratch</th>
           </tr>
         </thead>
         <tbody id="club-table-body"></tbody>
@@ -431,6 +432,24 @@ const SCRATCH_F_BENCHMARKS = {
   'Approach Wedge':  { carry: 92,  speed: 64,  smash: 1.18 },
   'Sand Wedge':      { carry: 80,  speed: 60,  smash: 1.15 },
   'Lob Wedge':       { carry: 65,  speed: 55,  smash: 1.10 },
+};
+
+// Female 12 handicap carry benchmarks — Shot Scope 2026 data
+const HCP12_F_BENCHMARKS = {
+  'Driver':          { carry: 170 },
+  '3 Wood':          { carry: 148 },
+  '5 Wood':          { carry: 138 },
+  '7 Wood':          { carry: 128 },
+  '4 Iron':          { carry: 122 },
+  '5 Iron':          { carry: 116 },
+  '6 Iron':          { carry: 110 },
+  '7 Iron':          { carry: 119 },
+  '8 Iron':          { carry: 108 },
+  '9 Iron':          { carry: 97  },
+  'Pitching Wedge':  { carry: 84  },
+  'Approach Wedge':  { carry: 74  },
+  'Sand Wedge':      { carry: 64  },
+  'Lob Wedge':       { carry: 52  },
 };
 
 // LPGA Tour pro carry benchmarks for reference (Trackman 2024)
@@ -546,6 +565,8 @@ function render(data) {
     const lpga = LPGA_BENCHMARKS[s.club];
     const carryGap = bench ? s.avgCarry - bench.carry : null;
     const lpgaGap = lpga ? s.avgCarry - lpga.carry : null;
+    const hcp12 = HCP12_F_BENCHMARKS[s.club];
+    const hcp12Gap = hcp12 ? s.avgCarry - hcp12.carry : null;
     const smashGap = bench ? s.avgSmash - bench.smash : null;
     const gapBadge = (gap) => {
       if (gap === null) return '<span style="color:var(--muted)">—</span>';
@@ -559,7 +580,7 @@ function render(data) {
       const color = gap >= 0 ? 'var(--accent)' : 'var(--danger)';
       return '<span style="color:' + color + ';font-family:var(--font-mono);font-size:12px">' + sign + gap.toFixed(2) + '</span>';
     };
-    return '<tr><td>' + s.club + '</td><td style="color:var(--muted)">' + s.count + '</td><td>' + s.avgCarry + ' yds</td><td>' + gapBadge(carryGap) + '</td><td>' + gapBadge(lpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
+    return '<tr><td>' + s.club + '</td><td style="color:var(--muted)">' + s.count + '</td><td>' + s.avgCarry + ' yds</td><td>' + gapBadge(carryGap) + '</td><td>' + gapBadge(hcp12Gap) + '</td><td>' + gapBadge(lpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
   }).join('');
 
   const chartDefaults = {
