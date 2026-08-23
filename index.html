@@ -340,8 +340,8 @@
             <th>Club</th>
             <th>Shots</th>
             <th>Avg carry</th>
-            <th>vs scratch</th>
             <th>vs 12 hdcp</th>
+            <th>vs scratch</th>
             <th>vs LPGA</th>
             <th>Spread</th>
             <th>Avg smash</th>
@@ -580,7 +580,7 @@ function render(data) {
       const color = gap >= 0 ? 'var(--accent)' : 'var(--danger)';
       return '<span style="color:' + color + ';font-family:var(--font-mono);font-size:12px">' + sign + gap.toFixed(2) + '</span>';
     };
-    return '<tr><td>' + s.club + '</td><td style="color:var(--muted)">' + s.count + '</td><td>' + s.avgCarry + ' yds</td><td>' + gapBadge(carryGap) + '</td><td>' + gapBadge(hcp12Gap) + '</td><td>' + gapBadge(lpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
+    return '<tr><td>' + s.club + '</td><td style="color:var(--muted)">' + s.count + '</td><td>' + s.avgCarry + ' yds</td><td>' + gapBadge(hcp12Gap) + '</td><td>' + gapBadge(carryGap) + '</td><td>' + gapBadge(lpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
   }).join('');
 
   const chartDefaults = {
