@@ -678,7 +678,10 @@ function render(data) {
       options: { ...chartDefaults, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} yds` } } } }
     });
   } else {
-    document.getElementById('trend-chart').closest('.card').innerHTML = '<p style="color:var(--muted);font-size:13px;padding:1rem;text-align:center">Trend charts appear after 2+ sessions</p>';
+    const trendEl = document.getElementById('trend-chart');
+    if (trendEl && trendEl.parentElement) {
+      trendEl.parentElement.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:1rem;text-align:center">Trend charts appear after 2+ sessions</p>';
+    }
   }
 
   // Gap vs scratch female benchmark chart
