@@ -409,6 +409,33 @@
     </div>
     <p style="font-size:11px;color:var(--muted);margin-bottom:2rem;padding:0 0.25rem">LPGA Tour pro averages shown for reference only — scratch amateur is the actionable benchmark.</p>
 
+    <p class="section-label">Club speed vs benchmarks</p>
+    <div class="card" style="margin-bottom: 0.5rem; overflow-x: auto;">
+      <table class="club-table" id="speed-table">
+        <thead>
+          <tr>
+            <th>Club</th>
+            <th>Your speed</th>
+            <th>12 hdcp</th>
+            <th>vs 12 hdcp</th>
+            <th>Scratch</th>
+            <th>vs SCR</th>
+            <th>LPGA</th>
+            <th>vs LPGA</th>
+          </tr>
+        </thead>
+        <tbody id="speed-table-body"></tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:2rem;padding:0 0.25rem">Club speed needs no ball correction — it measures the club, not the ball. Note: radar units like the LM1 can read 3–7 mph high vs Trackman.</p>
+
+    <p class="section-label">Speed gap vs scratch</p>
+    <div class="card" style="margin-bottom: 2rem;">
+      <div class="chart-wrap" style="height: 240px;">
+        <canvas id="speed-gap-chart" role="img" aria-label="Your club speed gap versus female scratch benchmarks per club"></canvas>
+      </div>
+    </div>
+
 
     <p class="section-label" style="margin-top:2rem">Sessions</p>
     <div class="card">
@@ -438,6 +465,26 @@ const SCRATCH_F_BENCHMARKS = {
   'Approach Wedge':  { carry: 92,  speed: 64,  smash: 1.18 },
   'Sand Wedge':      { carry: 80,  speed: 60,  smash: 1.15 },
   'Lob Wedge':       { carry: 65,  speed: 55,  smash: 1.10 },
+};
+
+// Club speed benchmarks (mph) — derived from Golfing Focus female driver data
+// by handicap bracket, scaled per-club using TrackMan loft/length ratios.
+// NOTE: driver figures are directly sourced; per-club figures are derived estimates.
+const SPEED_BENCHMARKS = {
+  'Driver':          { hcp12: 79, scratch: 89, lpga: 96 },
+  '3 Wood':          { hcp12: 74, scratch: 83, lpga: 90 },
+  '5 Wood':          { hcp12: 72, scratch: 80, lpga: 87 },
+  '7 Wood':          { hcp12: 70, scratch: 78, lpga: 85 },
+  '4 Iron':          { hcp12: 69, scratch: 77, lpga: 84 },
+  '5 Iron':          { hcp12: 68, scratch: 76, lpga: 83 },
+  '6 Iron':          { hcp12: 66, scratch: 74, lpga: 81 },
+  '7 Iron':          { hcp12: 65, scratch: 73, lpga: 79 },
+  '8 Iron':          { hcp12: 63, scratch: 71, lpga: 77 },
+  '9 Iron':          { hcp12: 61, scratch: 69, lpga: 75 },
+  'Pitching Wedge':  { hcp12: 59, scratch: 67, lpga: 73 },
+  'Approach Wedge':  { hcp12: 56, scratch: 64, lpga: 70 },
+  'Sand Wedge':      { hcp12: 53, scratch: 60, lpga: 66 },
+  'Lob Wedge':       { hcp12: 49, scratch: 55, lpga: 61 },
 };
 
 // Female 12 handicap carry benchmarks — Shot Scope 2026 data
@@ -719,6 +766,56 @@ function render(data) {
       trendEl.parentElement.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:1rem;text-align:center">Trend charts appear after 2+ sessions</p>';
     }
   }
+
+  // Club speed benchmark table
+  const speedClubs = clubStats.filter(s => SPEED_BENCHMARKS[s.club] && s.avgSpeed);
+  const speedGapBadge = (gap) => {
+    if (gap === null) return '<span style="color:var(--muted)">—</span>';
+    const sign = gap >= 0 ? '+' : '';
+    const color = gap >= 0 ? 'var(--accent)' : (gap >= -5 ? 'var(--amber)' : 'var(--danger)');
+    return '<span style="color:' + color + ';font-family:var(--font-mono);font-size:12px">' + sign + Math.round(gap) + '</span>';
+  };
+
+  document.getElementById('speed-table-body').innerHTML = speedClubs.map(s => {
+    const b = SPEED_BENCHMARKS[s.club];
+    return '<tr>' +
+      '<td>' + (CLUB_ABBR[s.club] || s.club) + '</td>' +
+      '<td>' + s.avgSpeed + ' mph</td>' +
+      '<td style="color:var(--muted)">' + b.hcp12 + '</td>' +
+      '<td>' + speedGapBadge(s.avgSpeed - b.hcp12) + '</td>' +
+      '<td style="color:var(--muted)">' + b.scratch + '</td>' +
+      '<td>' + speedGapBadge(s.avgSpeed - b.scratch) + '</td>' +
+      '<td style="color:var(--muted)">' + b.lpga + '</td>' +
+      '<td>' + speedGapBadge(s.avgSpeed - b.lpga) + '</td>' +
+      '</tr>';
+  }).join('');
+
+  // Speed gap vs scratch chart
+  const speedGapValues = speedClubs.map(s => s.avgSpeed - SPEED_BENCHMARKS[s.club].scratch);
+  destroyChart('speedgap');
+  charts['speedgap'] = new Chart(document.getElementById('speed-gap-chart'), {
+    type: 'bar',
+    data: {
+      labels: speedClubs.map(s => CLUB_ABBR[s.club] || s.club),
+      datasets: [{
+        data: speedGapValues,
+        backgroundColor: speedGapValues.map(v => v >= 0 ? '#4ade9bcc' : '#ff6b6bcc'),
+        borderRadius: 4, borderSkipped: false,
+        label: 'Speed gap vs scratch'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => {
+        const v = ctx.parsed.y;
+        return ' ' + (v >= 0 ? '+' : '') + Math.round(v) + ' mph vs female scratch';
+      }}}},
+      scales: {
+        x: { ticks: { color: '#7a7d8e', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color: '#7a7d8e', font: { size: 11 }, callback: v => (v >= 0 ? '+' : '') + v }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
 
   // Gap vs SCR female benchmark chart
   const gapClubs = clubStats.filter(s => SCRATCH_F_BENCHMARKS[s.club]);
