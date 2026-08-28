@@ -848,32 +848,108 @@ function render(data) {
   });
 
   const insights = [];
-  const pwStats = clubStats.find(s => s.club.toLowerCase().includes('pitching') || s.club === 'Pw');
-  const driverStats = clubStats.find(s => s.club.toLowerCase().includes('driver') || s.club === 'Dr');
-  const iron7Stats = clubStats.find(s => s.club.toLowerCase().includes('7 iron') || s.club === '7i');
 
-  // Benchmark-aware insights
-  clubStats.forEach(s => {
-    const bench = SCRATCH_F_BENCHMARKS[s.club];
-    if (!bench || s.count < 3) return;
-    const carryGap = s.avgCarry - bench.carry;
-    const smashGap = s.avgSmash - bench.smash;
-    if (carryGap >= 0) {
-      insights.push({ color: '#4ade9b', text: s.club + ' carry is +' + Math.abs(Math.round(carryGap)) + ' yds ahead of female scratch benchmark (' + bench.carry + ' yds). Strong.' });
-    } else if (carryGap >= -15) {
-      insights.push({ color: '#f5a623', text: s.club + ' carry is ' + Math.round(carryGap) + ' yds off female scratch (' + bench.carry + ' yds target). Closeable gap.' });
-    } else {
-      insights.push({ color: '#ff6b6b', text: s.club + ' carry is ' + Math.round(carryGap) + ' yds behind female scratch (' + bench.carry + ' yds target). Distance is the priority here.' });
+  // Per-session club stats, so we can compare latest vs previous
+  const statsForSession = (date) => {
+    const out = {};
+    data.filter(r => r.session_date === date).forEach(r => {
+      const c = r.club_full || r.club;
+      if (!c) return;
+      (out[c] = out[c] || []).push(r);
+    });
+    return Object.keys(out).reduce((acc, c) => {
+      const carries = out[c].map(r => parseFloat(r.carry_distance_yards)).filter(Boolean);
+      const speeds  = out[c].map(r => parseFloat(r.club_speed_mph)).filter(Boolean);
+      if (carries.length) acc[c] = {
+        count: out[c].length,
+        avgCarry: Math.round(avg(carries)),
+        spread: Math.round(Math.max(...carries) - Math.min(...carries)),
+        avgSpeed: speeds.length ? Math.round(avg(speeds) * 10) / 10 : null
+      };
+      return acc;
+    }, {});
+  };
+
+  const latestDate = sessions[sessions.length - 1];
+  const prevDate = sessions.length > 1 ? sessions[sessions.length - 2] : null;
+  const latest = statsForSession(latestDate);
+  const prev = prevDate ? statsForSession(prevDate) : {};
+
+  // --- Tier 1: what changed in the most recent session (needs >=5 shots both sessions) ---
+  Object.keys(latest).forEach(club => {
+    const L = latest[club], P = prev[club];
+    if (!P || L.count < 5 || P.count < 5) return;
+    const label = CLUB_ABBR[club] || club;
+    const dSpread = L.spread - P.spread;
+    const dCarry = L.avgCarry - P.avgCarry;
+
+    if (dSpread <= -10) {
+      insights.push({ color: '#4ade9b', text: label + ' dispersion tightened ' + Math.abs(dSpread) + ' yds since ' + prevDate + ' (' + P.spread + ' to ' + L.spread + ' yd spread). Best kind of improvement.' });
+    } else if (dSpread >= 10) {
+      insights.push({ color: '#f5a623', text: label + ' dispersion widened ' + dSpread + ' yds since ' + prevDate + ' (' + P.spread + ' to ' + L.spread + '). Worth a look.' });
     }
-    if (smashGap < -0.08) {
-      insights.push({ color: '#ff6b6b', text: s.club + ' smash factor ' + s.avgSmash.toFixed(2) + ' is ' + smashGap.toFixed(2) + ' below scratch benchmark — contact quality is costing you carry.' });
+    if (Math.abs(dCarry) >= 6) {
+      insights.push({
+        color: dCarry > 0 ? '#4ade9b' : '#f5a623',
+        text: label + ' carry ' + (dCarry > 0 ? 'up ' : 'down ') + Math.abs(dCarry) + ' yds vs ' + prevDate + ' (' + P.avgCarry + ' to ' + L.avgCarry + ').'
+              + (L.avgSpeed && P.avgSpeed && Math.abs(L.avgSpeed - P.avgSpeed) >= 1
+                 ? ' Club speed ' + (L.avgSpeed > P.avgSpeed ? 'up ' : 'down ') + Math.abs(Math.round((L.avgSpeed - P.avgSpeed) * 10) / 10) + ' mph too.' : '')
+      });
     }
   });
-  if (pwStats && pwStats.spread > 25) insights.push({ color: '#ff6b6b', text: 'PW carry spread is ' + pwStats.spread + ' yds — the biggest consistency gap in your bag. Closing this is a scoring priority.' });
-  if (sessions.length >= 3) insights.push({ color: '#6b8cff', text: sessions.length + ' sessions logged. Trend charts are active — watch carry gaps narrow as your index drops.' });
-  if (insights.length === 0) insights.push({ color: '#6b8cff', text: 'Add more sessions to unlock benchmark insights across your bag.' });
 
-  document.getElementById('insights').innerHTML = insights.slice(0,5).map(ins =>
+  // --- Tier 1b: latest vs the earliest session that has this club (the long arc) ---
+  Object.keys(latest).forEach(club => {
+    const L = latest[club];
+    if (L.count < 5) return;
+    const baseDate = sessions.find(d => {
+      const s = statsForSession(d)[club];
+      return s && s.count >= 5;
+    });
+    if (!baseDate || baseDate === latestDate || baseDate === prevDate) return;
+    const B = statsForSession(baseDate)[club];
+    const label = CLUB_ABBR[club] || club;
+    const dSpread = L.spread - B.spread;
+    if (dSpread <= -15) {
+      insights.push({ color: '#4ade9b', text: label + ' spread has come down from ' + B.spread + ' yds on ' + baseDate + ' to ' + L.spread + ' yds — ' + Math.abs(dSpread) + ' yds tighter since you started logging.' });
+    } else if (dSpread >= 15) {
+      insights.push({ color: '#f5a623', text: label + ' spread has widened from ' + B.spread + ' yds on ' + baseDate + ' to ' + L.spread + ' yds.' });
+    }
+  });
+
+  // --- Tier 2: worst dispersion in the latest session ---
+  const latestBySpread = Object.keys(latest)
+    .filter(c => latest[c].count >= 5)
+    .sort((a,b) => latest[b].spread - latest[a].spread);
+  if (latestBySpread.length) {
+    const worst = latestBySpread[0];
+    if (latest[worst].spread > 25) {
+      insights.push({ color: '#ff6b6b', text: (CLUB_ABBR[worst] || worst) + ' was your loosest club on ' + latestDate + ' — ' + latest[worst].spread + ' yd spread over ' + latest[worst].count + ' shots. Most valuable thing to tighten.' });
+    }
+  }
+
+  // --- Tier 3: benchmark gaps (all-time pooled), capped so they can't crowd out the rest ---
+  const benchInsights = [];
+  clubStats.forEach(s => {
+    const bench = SCRATCH_F_BENCHMARKS[s.club];
+    if (!bench || s.count < 5) return;
+    const label = CLUB_ABBR[s.club] || s.club;
+    const estCarry = Math.round(s.avgCarry * 1.11);
+    const gap = estCarry - bench.carry;
+    if (gap >= 0) {
+      benchInsights.push({ color: '#4ade9b', text: label + ' est. carry ' + estCarry + ' yds is +' + gap + ' vs female scratch (' + bench.carry + ').' });
+    } else if (gap < -15) {
+      benchInsights.push({ color: '#ff6b6b', text: label + ' est. carry ' + estCarry + ' yds is ' + gap + ' vs female scratch (' + bench.carry + ' target).' });
+    }
+  });
+  benchInsights.slice(0, 3).forEach(i => insights.push(i));
+
+  // --- Tier 4: context ---
+  insights.push({ color: '#6b8cff', text: sessions.length + ' session' + (sessions.length !== 1 ? 's' : '') + ' logged, ' + data.length + ' shots total. Latest: ' + latestDate + ' (' + data.filter(r => r.session_date === latestDate).length + ' shots).' });
+
+  if (insights.length === 0) insights.push({ color: '#6b8cff', text: 'Add another session to unlock session-over-session insights.' });
+
+  document.getElementById('insights').innerHTML = insights.slice(0,8).map(ins =>
     `<div class="insight"><div class="insight-dot" style="background:${ins.color}"></div><span style="color:var(--muted)">${ins.text}</span></div>`
   ).join('');
 
@@ -893,7 +969,8 @@ async function loadFromSheet() {
   document.getElementById('content').style.display = 'none';
   document.getElementById('error-msg').style.display = 'none';
   try {
-    const resp = await fetch(url);
+    const bust = (url.includes('?') ? '&' : '?') + 'cb=' + Date.now();
+    const resp = await fetch(url + bust, { cache: 'no-store' });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const text = await resp.text();
     const data = parseCSV(text);
