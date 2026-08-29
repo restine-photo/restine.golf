@@ -506,17 +506,24 @@ const HCP12_F_BENCHMARKS = {
 };
 
 // LPGA Tour pro carry benchmarks for reference (Trackman 2024)
+// carry: Trackman LPGA Tour averages. smash: derived from Trackman's published
+// LPGA club/ball speed pairs — driver (1.48) is well established, the rest are
+// ratio-derived and should be treated as approximate.
 const LPGA_BENCHMARKS = {
-  'Driver':          { carry: 223 },
-  '3 Wood':          { carry: 200 },
-  '5 Wood':          { carry: 189 },
-  '7 Wood':          { carry: 178 },
-  '5 Iron':          { carry: 161 },
-  '6 Iron':          { carry: 152 },
-  '7 Iron':          { carry: 143 },
-  '8 Iron':          { carry: 133 },
-  '9 Iron':          { carry: 123 },
-  'Pitching Wedge':  { carry: 110 },
+  'Driver':          { carry: 223, smash: 1.48 },
+  '3 Wood':          { carry: 200, smash: 1.47 },
+  '5 Wood':          { carry: 189, smash: 1.47 },
+  '7 Wood':          { carry: 178, smash: 1.45 },
+  '4 Iron':          { carry: 169, smash: 1.43 },
+  '5 Iron':          { carry: 161, smash: 1.41 },
+  '6 Iron':          { carry: 152, smash: 1.40 },
+  '7 Iron':          { carry: 143, smash: 1.39 },
+  '8 Iron':          { carry: 133, smash: 1.35 },
+  '9 Iron':          { carry: 123, smash: 1.31 },
+  'Pitching Wedge':  { carry: 110, smash: 1.28 },
+  'Approach Wedge':  { carry: 98,  smash: 1.25 },
+  'Sand Wedge':      { carry: 85,  smash: 1.21 },
+  'Lob Wedge':       { carry: 70,  smash: 1.16 },
 };
 const COLORS = ['#6b8cff','#4ade9b','#f5a623','#ff6b6b','#a78bfa','#38bdf8','#fb7185','#34d399','#fbbf24','#60a5fa'];
 
@@ -607,11 +614,39 @@ function render(data) {
   const driverRows = data.filter(r => (r.club_full || '').toLowerCase().includes('driver'));
   const avgDriverCarry = driverRows.length ? Math.round(avg(driverRows.map(r => parseFloat(r.carry_distance_yards)))) : null;
 
+  // Shot-weighted expected smash: a pooled smash average is really a function of
+  // club mix, so compare it to the LPGA benchmark weighted by the same mix.
+  const smashRows = data.filter(r => parseFloat(r.smash_factor) && LPGA_BENCHMARKS[r.club_full || r.club]);
+  const expectedSmash = smashRows.length
+    ? avg(smashRows.map(r => LPGA_BENCHMARKS[r.club_full || r.club].smash))
+    : null;
+
+  // amber band = "close but behind"; red = meaningfully behind
+  const kpiColor = (val, bench, amberBand) => {
+    if (bench === null || bench === undefined) return 'var(--text)';
+    if (val >= bench) return 'var(--accent)';
+    if (val >= bench - amberBand) return 'var(--amber)';
+    return 'var(--danger)';
+  };
+  const signed = (n, unit) => (n >= 0 ? '+' : '') + n + (unit || '');
+
+  const smashColor = expectedSmash === null ? 'var(--text)' : kpiColor(avgSmash, expectedSmash, 0.06);
+  const smashSub = expectedSmash === null
+    ? 'all clubs'
+    : signed((Math.round((avgSmash - expectedSmash) * 100) / 100).toFixed(2)) + ' vs LPGA (mix-adjusted)';
+
+  const estDriverCarry = avgDriverCarry ? Math.round(avgDriverCarry * 1.11) : null;
+  const driverBench = LPGA_BENCHMARKS['Driver'].carry;
+  const driverColor = estDriverCarry ? kpiColor(estDriverCarry, driverBench, 20) : 'var(--text)';
+  const driverSub = estDriverCarry
+    ? '~' + estDriverCarry + ' est · ' + signed(estDriverCarry - driverBench) + ' vs LPGA'
+    : driverRows.length + ' shots';
+
   document.getElementById('kpi-row').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Total shots</div><div class="kpi-value">${totalShots}</div><div class="kpi-sub">${sessions.length} session${sessions.length!==1?'s':''}</div></div>
-    <div class="kpi"><div class="kpi-label">Smash factor</div><div class="kpi-value">${avgSmash.toFixed(2)}</div><div class="kpi-sub">all clubs</div></div>
-    <div class="kpi"><div class="kpi-label">Best carry</div><div class="kpi-value">${bestCarry}<span style="font-size:14px;color:var(--muted)"> yds</span></div><div class="kpi-sub">all time</div></div>
-    ${avgDriverCarry ? `<div class="kpi"><div class="kpi-label">Driver avg carry</div><div class="kpi-value">${avgDriverCarry}<span style="font-size:14px;color:var(--muted)"> yds</span></div><div class="kpi-sub">${driverRows.length} shots</div></div>` : ''}
+    <div class="kpi"><div class="kpi-label">Total shots</div><div class="kpi-value" style="color:var(--text)">${totalShots}</div><div class="kpi-sub">${sessions.length} session${sessions.length!==1?'s':''}</div></div>
+    <div class="kpi"><div class="kpi-label">Smash factor</div><div class="kpi-value" style="color:${smashColor}">${avgSmash.toFixed(2)}</div><div class="kpi-sub">${smashSub}</div></div>
+    <div class="kpi"><div class="kpi-label">Best carry</div><div class="kpi-value" style="color:var(--text)">${bestCarry}<span style="font-size:14px;color:var(--muted)"> yds</span></div><div class="kpi-sub">all time · no benchmark</div></div>
+    ${avgDriverCarry ? `<div class="kpi"><div class="kpi-label">Driver avg carry</div><div class="kpi-value" style="color:${driverColor}">${avgDriverCarry}<span style="font-size:14px;color:var(--muted)"> yds</span></div><div class="kpi-sub">${driverSub}</div></div>` : ''}
   `;
 
   const clubStats = clubs.map(club => {
