@@ -1023,10 +1023,6 @@ function render(data) {
   if (!insights.length) insights.push({ group: 'Context', color: '#6b8cff',
     text: 'Log another session to unlock session-over-session pattern detection.' });
 
-  insights.push({ group: 'Context', color: '#6b8cff',
-    text: sessions.length + ' sessions, ' + data.length + ' shots. Latest: ' + latestDate
-        + ' (' + latestRows.length + ' shots).' });
-
   document.getElementById('insights').innerHTML = (() => {
     let out = '', seen = null;
     insights.slice(0, 10).forEach(ins => {
