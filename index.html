@@ -335,7 +335,7 @@
 <body>
 
 <header>
-  <h1>⛳ restine golf stats</h1>
+  <h1>⛳ golf.stats</h1>
   <span id="last-updated"></span>
   <div id="sheet-config">
     <button onclick="loadFromSheet()" id="refresh-btn" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--muted);">↻ Refresh</button>
@@ -413,6 +413,14 @@
       <div style="display:flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem;" id="trend-legend"></div>
       <div class="chart-wrap" style="height: 240px;">
         <canvas id="trend-chart" role="img" aria-label="Carry distance trend over time by club"></canvas>
+      </div>
+    </div>
+
+    <p class="section-label">Club speed trend over sessions</p>
+    <div class="card" style="margin-bottom: 2rem;">
+      <div style="display:flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem;" id="speed-trend-legend"></div>
+      <div class="chart-wrap" style="height: 240px;">
+        <canvas id="speed-trend-chart" role="img" aria-label="Club speed trend over time by club"></canvas>
       </div>
     </div>
 
@@ -800,6 +808,38 @@ function render(data) {
     const trendEl = document.getElementById('trend-chart');
     if (trendEl && trendEl.parentElement) {
       trendEl.parentElement.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:1rem;text-align:center">Trend charts appear after 2+ sessions</p>';
+    }
+  }
+
+  if (sessions.length > 1) {
+    const speedTrendDatasets = clubs.slice(0,6).map((club, i) => {
+      return {
+        label: club,
+        data: sessions.map(date => {
+          const rows = data.filter(r => r.session_date === date && r.club_full === club);
+          const speeds = rows.map(r => parseFloat(r.club_speed_mph)).filter(Boolean);
+          return speeds.length ? Math.round(avg(speeds) * 10) / 10 : null;
+        }),
+        borderColor: COLORS[i % COLORS.length],
+        backgroundColor: COLORS[i % COLORS.length] + '20',
+        tension: 0.3, pointRadius: 4, borderWidth: 2, spanGaps: true
+      };
+    });
+
+    document.getElementById('speed-trend-legend').innerHTML = speedTrendDatasets.map(d =>
+      `<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);font-family:var(--font-mono)"><span style="width:10px;height:10px;border-radius:2px;background:${d.borderColor};display:inline-block"></span>${d.label}</span>`
+    ).join('');
+
+    destroyChart('speedtrend');
+    charts['speedtrend'] = new Chart(document.getElementById('speed-trend-chart'), {
+      type: 'line',
+      data: { labels: sessions, datasets: speedTrendDatasets },
+      options: { ...chartDefaults, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} mph` } } } }
+    });
+  } else {
+    const speedTrendEl = document.getElementById('speed-trend-chart');
+    if (speedTrendEl && speedTrendEl.parentElement) {
+      speedTrendEl.parentElement.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:1rem;text-align:center">Trend charts appear after 2+ sessions</p>';
     }
   }
 
