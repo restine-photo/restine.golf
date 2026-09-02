@@ -969,16 +969,6 @@ function render(data) {
     }
   }
 
-  // Volume flag — fatigue context the speed pattern can't distinguish on its own
-  if (sessions.length >= 2) {
-    const first = new Date(sessions[0]), last = new Date(latestDate);
-    const days = Math.max(1, Math.round((last - first) / 86400000) + 1);
-    if (data.length / days >= 25) {
-      insights.push({ group: 'Headline', color: '#6b8cff',
-        text: data.length + ' shots across ' + days + ' days. That is heavy volume — worth noting before reading any speed drop as a swing change.' });
-    }
-  }
-
   // ---------- IMPROVING ----------
   deltas.filter(d => d.dSpread !== null && d.dSpread <= -10).sort((a,b) => a.dSpread - b.dSpread).forEach(d => {
     insights.push({ group: 'Improving', color: '#4ade9b',
