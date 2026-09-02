@@ -386,6 +386,13 @@
 
     <p style="font-size:11px;color:var(--muted);margin:-1.5rem 0 1.5rem;padding:0 0.25rem">Raw carry/dist = range ball data. Est. columns = +11% adjustment for premium ball (Kirkland, Pro V1, TP5, etc.) on course. Benchmark gaps use estimated carry.</p>
 
+    <p class="section-label">Consistency (carry spread per club)</p>
+    <div class="card" style="margin-bottom: 2rem;">
+      <div class="chart-wrap" style="height: 220px;">
+        <canvas id="spread-chart" role="img" aria-label="Carry distance spread (max minus min) per club — tighter is better"></canvas>
+      </div>
+    </div>
+
     <p class="section-label">Carry distance by club</p>
     <div class="card" style="margin-bottom: 2rem;">
       <div class="chart-wrap" style="height: 280px;">
@@ -413,13 +420,6 @@
       <div style="display:flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem;" id="trend-legend"></div>
       <div class="chart-wrap" style="height: 240px;">
         <canvas id="trend-chart" role="img" aria-label="Carry distance trend over time by club"></canvas>
-      </div>
-    </div>
-
-    <p class="section-label">Consistency (carry spread per club)</p>
-    <div class="card" style="margin-bottom: 2rem;">
-      <div class="chart-wrap" style="height: 220px;">
-        <canvas id="spread-chart" role="img" aria-label="Carry distance spread (max minus min) per club — tighter is better"></canvas>
       </div>
     </div>
 
