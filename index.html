@@ -270,7 +270,7 @@
   .round-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0 16px; }
   .round-kpi { background: var(--surface2); border-radius: 8px; padding: 10px; text-align: center; }
   .round-kpi-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-family: var(--font-mono); }
-  .round-kpi-value { font-size: 18px; font-weight: 600; color: var(--accent); font-family: var(--font-mono); }
+  .round-kpi-value { font-size: 18px; font-weight: 600; font-family: var(--font-mono); }
   .hole-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--font-mono); }
   .hole-table th { text-align: center; color: var(--muted); font-weight: 400; padding: 4px 2px; border-bottom: 1px solid var(--border); font-size: 10px; }
   .hole-table td { text-align: center; padding: 5px 2px; color: var(--text); border-bottom: 1px solid var(--border); }
@@ -1216,15 +1216,22 @@ function render(data) {
         + (key==='gir' ? ((h.strokes - h.putts) <= (h.par - 2) ? '<span class="hole-gir">●</span>' : '') : h[key])
         + '</td>').join('') + '</tr>';
 
+    // Color each KPI by what it actually means, not a flat accent.
+    // Score: relative to par. Putts: 2/hole (36) is average; below is good, well above is a concern.
+    // GIR: any real GIR is a positive signal at this stage of the handicap journey.
+    const scoreColor = toPar <= 5 ? 'var(--accent)' : toPar <= 15 ? 'var(--amber)' : 'var(--danger)';
+    const puttsColor = totalPutts <= 32 ? 'var(--accent)' : totalPutts <= 38 ? 'var(--amber)' : 'var(--danger)';
+    const girColor = girCount >= 9 ? 'var(--accent)' : girCount >= 4 ? 'var(--amber)' : 'var(--danger)';
+
     return '<div class="card round-card">' +
       '<div class="round-header"><span class="round-course">' + round.course + '</span>' +
       '<span class="round-meta">' + round.tees + ' · CR ' + round.courseRating + '/' + round.slope + '</span></div>' +
       '<div class="round-meta" style="margin-bottom:8px">' + round.date + '</div>' +
       '<div class="round-kpis">' +
-        '<div class="round-kpi"><div class="round-kpi-label">Score</div><div class="round-kpi-value">' + totalStrokes + ' (' + (toPar>=0?'+':'') + toPar + ')</div></div>' +
-        '<div class="round-kpi"><div class="round-kpi-label">Front / Back</div><div class="round-kpi-value" style="font-size:14px">' + frontStrokes + ' / ' + backStrokes + '</div></div>' +
-        '<div class="round-kpi"><div class="round-kpi-label">Putts</div><div class="round-kpi-value">' + totalPutts + '</div></div>' +
-        '<div class="round-kpi"><div class="round-kpi-label">GIR</div><div class="round-kpi-value">' + girCount + '/18</div></div>' +
+        '<div class="round-kpi"><div class="round-kpi-label">Score</div><div class="round-kpi-value" style="color:' + scoreColor + '">' + totalStrokes + ' (' + (toPar>=0?'+':'') + toPar + ')</div></div>' +
+        '<div class="round-kpi"><div class="round-kpi-label">Front / Back</div><div class="round-kpi-value" style="font-size:14px;color:var(--text)">' + frontStrokes + ' / ' + backStrokes + '</div></div>' +
+        '<div class="round-kpi"><div class="round-kpi-label">Putts</div><div class="round-kpi-value" style="color:' + puttsColor + '">' + totalPutts + '</div></div>' +
+        '<div class="round-kpi"><div class="round-kpi-label">GIR</div><div class="round-kpi-value" style="color:' + girColor + '">' + girCount + '/18</div></div>' +
       '</div>' +
       '<div style="overflow-x:auto"><table class="hole-table">' +
         '<thead><tr><th>Hole</th>' + round.holes.map(h=>'<th>'+h.hole+'</th>').join('') + '</tr></thead>' +
