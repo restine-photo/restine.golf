@@ -262,6 +262,24 @@
   }
 
   .session-date { color: var(--muted); }
+
+  .round-card { margin-bottom: 1.5rem; }
+  .round-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+  .round-course { font-size: 15px; font-weight: 600; color: var(--text); }
+  .round-meta { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+  .round-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0 16px; }
+  .round-kpi { background: var(--surface2); border-radius: 8px; padding: 10px; text-align: center; }
+  .round-kpi-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-family: var(--font-mono); }
+  .round-kpi-value { font-size: 18px; font-weight: 600; color: var(--accent); font-family: var(--font-mono); }
+  .hole-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--font-mono); }
+  .hole-table th { text-align: center; color: var(--muted); font-weight: 400; padding: 4px 2px; border-bottom: 1px solid var(--border); font-size: 10px; }
+  .hole-table td { text-align: center; padding: 5px 2px; color: var(--text); border-bottom: 1px solid var(--border); }
+  .hole-table td:first-child, .hole-table th:first-child { text-align: left; color: var(--muted); padding-left: 4px; }
+  .hole-birdie { color: var(--accent); font-weight: 600; }
+  .hole-par { color: var(--text); }
+  .hole-bogey { color: var(--amber); }
+  .hole-double { color: var(--danger); }
+  .hole-gir { color: var(--accent); }
   .session-shots { color: var(--accent2); }
 
   #loading {
@@ -462,9 +480,12 @@
 
 
     <p class="section-label" style="margin-top:2rem">Sessions</p>
-    <div class="card">
+    <div class="card" style="margin-bottom: 2rem;">
       <div class="session-list" id="session-list"></div>
     </div>
+
+    <p class="section-label">On-course rounds</p>
+    <div id="rounds-container"></div>
   </div>
 </main>
 
@@ -553,6 +574,35 @@ const COLORS = ['#6b8cff','#4ade9b','#f5a623','#ff6b6b','#a78bfa','#38bdf8','#fb
 
 let charts = {};
 let allData = [];
+
+const ROUNDS = [
+  {
+    date: '2026-09-04',
+    course: 'Half Moon Bay Ocean Course',
+    tees: 'White (Women\'s)',
+    courseRating: 74.8, slope: 133,
+    holes: [
+      { hole: 1,  par: 4, strokes: 5, putts: 2 },
+      { hole: 2,  par: 4, strokes: 4, putts: 2 }, // GHIN posts hole 2 at par 4 (men's row); corrected from initial par-3 misread
+      { hole: 3,  par: 3, strokes: 3, putts: 2 },
+      { hole: 4,  par: 5, strokes: 6, putts: 2 },
+      { hole: 5,  par: 4, strokes: 5, putts: 1 },
+      { hole: 6,  par: 4, strokes: 6, putts: 2 },
+      { hole: 7,  par: 3, strokes: 4, putts: 2 },
+      { hole: 8,  par: 5, strokes: 6, putts: 3 },
+      { hole: 9,  par: 3, strokes: 3, putts: 1 },
+      { hole: 10, par: 5, strokes: 5, putts: 2 },
+      { hole: 11, par: 4, strokes: 5, putts: 2 },
+      { hole: 12, par: 3, strokes: 4, putts: 2 },
+      { hole: 13, par: 4, strokes: 5, putts: 2 },
+      { hole: 14, par: 5, strokes: 7, putts: 3 },
+      { hole: 15, par: 4, strokes: 5, putts: 2 },
+      { hole: 16, par: 4, strokes: 5, putts: 2 },
+      { hole: 17, par: 3, strokes: 3, putts: 2 },
+      { hole: 18, par: 5, strokes: 6, putts: 2 },
+    ]
+  }
+];
 
 const CLUB_ABBR = {
   'Driver': 'DR',
@@ -1141,6 +1191,53 @@ function render(data) {
     }
     return out;
   })();
+
+  // ---------- On-course rounds ----------
+  const scoreClass = (strokes, par) => {
+    const diff = strokes - par;
+    if (diff <= -1) return 'hole-birdie';
+    if (diff === 0) return 'hole-par';
+    if (diff === 1) return 'hole-bogey';
+    return 'hole-double';
+  };
+
+  document.getElementById('rounds-container').innerHTML = ROUNDS.map(round => {
+    const totalPar = round.holes.reduce((s,h) => s + h.par, 0);
+    const totalStrokes = round.holes.reduce((s,h) => s + h.strokes, 0);
+    const totalPutts = round.holes.reduce((s,h) => s + h.putts, 0);
+    const girCount = round.holes.filter(h => (h.strokes - h.putts) <= (h.par - 2)).length;
+    const front = round.holes.slice(0,9), back = round.holes.slice(9,18);
+    const frontStrokes = front.reduce((s,h)=>s+h.strokes,0), frontPar = front.reduce((s,h)=>s+h.par,0);
+    const backStrokes = back.reduce((s,h)=>s+h.strokes,0), backPar = back.reduce((s,h)=>s+h.par,0);
+    const toPar = totalStrokes - totalPar;
+
+    const holeRow = (label, key, holes) => '<tr><td>' + label + '</td>' +
+      holes.map(h => '<td' + (key==='strokes' ? ' class="'+scoreClass(h.strokes,h.par)+'"' : '') + '>'
+        + (key==='gir' ? ((h.strokes - h.putts) <= (h.par - 2) ? '<span class="hole-gir">●</span>' : '') : h[key])
+        + '</td>').join('') + '</tr>';
+
+    return '<div class="card round-card">' +
+      '<div class="round-header"><span class="round-course">' + round.course + '</span>' +
+      '<span class="round-meta">' + round.tees + ' · CR ' + round.courseRating + '/' + round.slope + '</span></div>' +
+      '<div class="round-meta" style="margin-bottom:8px">' + round.date + '</div>' +
+      '<div class="round-kpis">' +
+        '<div class="round-kpi"><div class="round-kpi-label">Score</div><div class="round-kpi-value">' + totalStrokes + ' (' + (toPar>=0?'+':'') + toPar + ')</div></div>' +
+        '<div class="round-kpi"><div class="round-kpi-label">Front / Back</div><div class="round-kpi-value" style="font-size:14px">' + frontStrokes + ' / ' + backStrokes + '</div></div>' +
+        '<div class="round-kpi"><div class="round-kpi-label">Putts</div><div class="round-kpi-value">' + totalPutts + '</div></div>' +
+        '<div class="round-kpi"><div class="round-kpi-label">GIR</div><div class="round-kpi-value">' + girCount + '/18</div></div>' +
+      '</div>' +
+      '<div style="overflow-x:auto"><table class="hole-table">' +
+        '<thead><tr><th>Hole</th>' + round.holes.map(h=>'<th>'+h.hole+'</th>').join('') + '</tr></thead>' +
+        '<tbody>' +
+          '<tr><td>Par</td>' + round.holes.map(h=>'<td>'+h.par+'</td>').join('') + '</tr>' +
+          holeRow('Score','strokes', round.holes) +
+          holeRow('Putts','putts', round.holes) +
+          holeRow('GIR','gir', round.holes) +
+        '</tbody>' +
+      '</table></div>' +
+      '<p style="font-size:10px;color:var(--muted);margin-top:8px">Front ' + frontStrokes + ' (par ' + frontPar + ') · Back ' + backStrokes + ' (par ' + backPar + ')</p>' +
+    '</div>';
+  }).join('');
 
   document.getElementById('content').style.display = 'block';
 }
