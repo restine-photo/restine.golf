@@ -279,6 +279,28 @@
   .hole-par { color: var(--text); }
   .hole-bogey { color: var(--amber); }
   .hole-double { color: var(--danger); }
+
+  .score-mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; margin: 0 auto;
+  }
+  .score-birdie {
+    border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent);
+  }
+  .score-eagle {
+    border-radius: 50%; border: 1.5px solid var(--accent);
+    box-shadow: 0 0 0 2.5px var(--bg), 0 0 0 4px var(--accent);
+    color: var(--accent);
+  }
+  .score-bogey {
+    border-radius: 3px; border: 1.5px solid var(--amber); color: var(--amber);
+  }
+  .score-double {
+    border-radius: 3px; border: 1.5px solid var(--danger);
+    box-shadow: 0 0 0 2.5px var(--bg), 0 0 0 4px var(--danger);
+    color: var(--danger);
+  }
+  .score-par { color: var(--text); }
   .hole-gir { color: var(--accent); }
   .session-shots { color: var(--accent2); }
 
@@ -1193,12 +1215,17 @@ function render(data) {
   })();
 
   // ---------- On-course rounds ----------
-  const scoreClass = (strokes, par) => {
+  // Standard scorecard marks: circle = birdie, double circle = eagle+,
+  // square = bogey, double square = double bogey or worse, no mark = par.
+  const scoreMark = (strokes, par) => {
     const diff = strokes - par;
-    if (diff <= -1) return 'hole-birdie';
-    if (diff === 0) return 'hole-par';
-    if (diff === 1) return 'hole-bogey';
-    return 'hole-double';
+    let cls = '';
+    if (diff <= -2) cls = 'score-eagle';
+    else if (diff === -1) cls = 'score-birdie';
+    else if (diff === 1) cls = 'score-bogey';
+    else if (diff >= 2) cls = 'score-double';
+    else cls = 'score-par';
+    return '<span class="score-mark ' + cls + '">' + strokes + '</span>';
   };
 
   document.getElementById('rounds-container').innerHTML = ROUNDS.map(round => {
@@ -1212,8 +1239,10 @@ function render(data) {
     const toPar = totalStrokes - totalPar;
 
     const holeRow = (label, key, holes) => '<tr><td>' + label + '</td>' +
-      holes.map(h => '<td' + (key==='strokes' ? ' class="'+scoreClass(h.strokes,h.par)+'"' : '') + '>'
-        + (key==='gir' ? ((h.strokes - h.putts) <= (h.par - 2) ? '<span class="hole-gir">●</span>' : '') : h[key])
+      holes.map(h => '<td>'
+        + (key==='strokes' ? scoreMark(h.strokes, h.par)
+           : key==='gir' ? ((h.strokes - h.putts) <= (h.par - 2) ? '<span class="hole-gir">●</span>' : '')
+           : h[key])
         + '</td>').join('') + '</tr>';
 
     // Color each KPI by what it actually means, not a flat accent.
