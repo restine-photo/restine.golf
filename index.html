@@ -1254,7 +1254,7 @@ function render(data) {
     return '<span class="score-mark ' + cls + '">' + strokes + '</span>';
   };
 
-  document.getElementById('rounds-container').innerHTML = ROUNDS.map(round => {
+  document.getElementById('rounds-container').innerHTML = [...ROUNDS].sort((a,b) => new Date(b.date) - new Date(a.date)).map(round => {
     const totalPar = round.holes.reduce((s,h) => s + h.par, 0);
     const totalStrokes = round.holes.reduce((s,h) => s + h.strokes, 0);
     const totalPutts = round.holes.reduce((s,h) => s + h.putts, 0);
