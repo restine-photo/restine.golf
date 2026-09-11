@@ -630,7 +630,7 @@ const ROUNDS = [
     date: '2026-09-04',
     course: 'Half Moon Bay Ocean Course',
     tees: 'White (Women\'s)',
-    courseRating: 74.8, slope: 133,
+    courseRating: 74.8, slope: 133, yardage: 6081,
     holes: [
       { hole: 1,  par: 4, strokes: 5, putts: 2 },
       { hole: 2,  par: 4, strokes: 4, putts: 2 }, // GHIN posts hole 2 at par 4 (men's row); corrected from initial par-3 misread
@@ -656,7 +656,7 @@ const ROUNDS = [
     date: '2026-09-10',
     course: 'The Club at Ruby Hill',
     tees: 'Red (Women\'s)',
-    courseRating: 70.5, slope: 124,
+    courseRating: 70.5, slope: 124, yardage: 5279,
     holes: [
       { hole: 1,  par: 4, strokes: 4, putts: 2 },
       { hole: 2,  par: 4, strokes: 6, putts: 3 },
@@ -1388,7 +1388,7 @@ function render(data) {
 
     return '<div class="card round-card">' +
       '<div class="round-header"><span class="round-course">' + round.course + '</span>' +
-      '<span class="round-meta">' + round.tees + ' · CR ' + round.courseRating + '/' + round.slope + '</span></div>' +
+      '<span class="round-meta">' + round.tees + (round.yardage ? ' · ' + round.yardage.toLocaleString() + ' yds' : '') + ' · CR ' + round.courseRating + '/' + round.slope + '</span></div>' +
       '<div class="round-meta" style="margin-bottom:8px">' + round.date + '</div>' +
       '<div class="round-kpis">' +
         '<div class="round-kpi"><div class="round-kpi-label">Score</div><div class="round-kpi-value" style="color:' + scoreColor + '">' + totalStrokes + ' (' + (toPar>=0?'+':'') + toPar + ')</div></div>' +
