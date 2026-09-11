@@ -1327,10 +1327,6 @@ function render(data) {
     }
 
     // --- Latest round specifically ---
-    roundInsights.push({ group: 'Latest round — ' + latest.round.course, color: '#6b8cff',
-      text: latest.round.date + ': shot ' + latest.totalStrokes + ' (' + (latest.toPar>=0?'+':'') + latest.toPar
-          + '), ' + latest.gir + '/18 GIR, ' + latest.totalPutts + ' putts.' });
-
     if (latest.threePutts >= 2) {
       roundInsights.push({ group: 'Latest round — ' + latest.round.course, color: '#ff6b6b',
         text: latest.threePutts + ' three-putts this round. That is the single biggest leak in the scorecard'
