@@ -529,7 +529,11 @@
     </div>
 
     <div class="tab-panel" id="tab-rounds">
-    <p class="section-label" style="margin-top:0">On-course rounds</p>
+    <div class="card" style="margin-bottom: 1.25rem;">
+      <p class="card-title">Key insights</p>
+      <div class="insight-list" id="round-insights"></div>
+    </div>
+    <p class="section-label">On-course rounds</p>
     <div id="rounds-container"></div>
     </div>
   </div>
@@ -1277,6 +1281,86 @@ function render(data) {
     else cls = 'score-par';
     return '<span class="score-mark ' + cls + '">' + strokes + '</span>';
   };
+
+  // ---------- Rounds tab: key insights ----------
+  const roundSummary = (round) => {
+    const totalPar = round.holes.reduce((s,h) => s + h.par, 0);
+    const totalStrokes = round.holes.reduce((s,h) => s + h.strokes, 0);
+    const totalPutts = round.holes.reduce((s,h) => s + h.putts, 0);
+    const gir = round.holes.filter(h => (h.strokes - h.putts) <= (h.par - 2)).length;
+    const threePutts = round.holes.filter(h => h.putts >= 3).length;
+    return { round, totalPar, totalStrokes, toPar: totalStrokes - totalPar, totalPutts, gir, threePutts };
+  };
+
+  const roundInsights = [];
+  if (ROUNDS.length) {
+    const sortedRounds = [...ROUNDS].sort((a,b) => new Date(a.date) - new Date(b.date));
+    const summaries = sortedRounds.map(roundSummary);
+    const latest = summaries[summaries.length - 1];
+    const prior = summaries.slice(0, -1);
+
+    // --- Cumulative, across all rounds logged ---
+    const avgToPar = Math.round(avg(summaries.map(s => s.toPar)) * 10) / 10;
+    const avgPutts = Math.round(avg(summaries.map(s => s.totalPutts)) * 10) / 10;
+    const avgGir = Math.round(avg(summaries.map(s => s.gir)) * 10) / 10;
+    const totalThreePutts = summaries.reduce((s,x) => s + x.threePutts, 0);
+    const totalHoles = summaries.length * 18;
+
+    roundInsights.push({ group: 'Cumulative — ' + summaries.length + ' round' + (summaries.length > 1 ? 's' : ''),
+      color: '#6b8cff',
+      text: 'Averaging ' + (avgToPar>=0?'+':'') + avgToPar + ' to par, ' + avgPutts + ' putts, and ' + avgGir
+          + '/18 GIR per round. ' + totalThreePutts + ' three-putts across ' + totalHoles + ' holes logged.' });
+
+    if (summaries.length >= 2) {
+      const girTrend = latest.gir - avg(prior.map(s => s.gir));
+      const puttsTrend = latest.totalPutts - avg(prior.map(s => s.totalPutts));
+      if (Math.abs(girTrend) >= 2) {
+        roundInsights.push({ group: 'Cumulative — ' + summaries.length + ' rounds', color: girTrend > 0 ? '#4ade9b' : '#f5a623',
+          text: 'GIR is trending ' + (girTrend > 0 ? 'up' : 'down') + ' — latest round hit ' + latest.gir
+              + ' vs an average of ' + (Math.round(avg(prior.map(s=>s.gir))*10)/10) + ' in prior rounds.' });
+      }
+      if (Math.abs(puttsTrend) >= 3) {
+        roundInsights.push({ group: 'Cumulative — ' + summaries.length + ' rounds', color: puttsTrend < 0 ? '#4ade9b' : '#ff6b6b',
+          text: 'Putts are trending ' + (puttsTrend < 0 ? 'down' : 'up') + ' — latest round took ' + latest.totalPutts
+              + ' vs an average of ' + (Math.round(avg(prior.map(s=>s.totalPutts))*10)/10) + ' in prior rounds.' });
+      }
+    }
+
+    // --- Latest round specifically ---
+    roundInsights.push({ group: 'Latest round — ' + latest.round.course, color: '#6b8cff',
+      text: latest.round.date + ': shot ' + latest.totalStrokes + ' (' + (latest.toPar>=0?'+':'') + latest.toPar
+          + '), ' + latest.gir + '/18 GIR, ' + latest.totalPutts + ' putts.' });
+
+    if (latest.threePutts >= 2) {
+      roundInsights.push({ group: 'Latest round — ' + latest.round.course, color: '#ff6b6b',
+        text: latest.threePutts + ' three-putts this round. That is the single biggest leak in the scorecard'
+            + (latest.gir >= 8 ? ' — ball-striking reached plenty of greens, but strokes were given back on the green.' : '.') });
+    } else if (latest.gir >= 9) {
+      roundInsights.push({ group: 'Latest round — ' + latest.round.course, color: '#4ade9b',
+        text: latest.gir + '/18 GIR is a strong ball-striking round — over half the greens hit in regulation.' });
+    }
+
+    const worstHole = [...latest.round.holes].sort((a,b) => (b.strokes-b.par) - (a.strokes-a.par))[0];
+    if (worstHole.strokes - worstHole.par >= 2) {
+      roundInsights.push({ group: 'Latest round — ' + latest.round.course, color: '#f5a623',
+        text: 'Hole ' + worstHole.hole + ' (par ' + worstHole.par + ') was the worst of the round at ' + worstHole.strokes
+            + ' strokes, ' + worstHole.putts + ' putts.' });
+    }
+  } else {
+    roundInsights.push({ group: 'Context', color: '#6b8cff', text: 'Log a round to unlock insights here.' });
+  }
+
+  document.getElementById('round-insights').innerHTML = (() => {
+    let out = '', seen = null;
+    roundInsights.forEach(ins => {
+      if (ins.group !== seen) {
+        seen = ins.group;
+        out += '<p style="font-size:10px;font-family:var(--font-mono);color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin:10px 0 2px">' + ins.group + '</p>';
+      }
+      out += '<div class="insight"><div class="insight-dot" style="background:' + ins.color + '"></div><span style="color:var(--muted)">' + ins.text + '</span></div>';
+    });
+    return out;
+  })();
 
   document.getElementById('rounds-container').innerHTML = [...ROUNDS].sort((a,b) => new Date(b.date) - new Date(a.date)).map(round => {
     const totalPar = round.holes.reduce((s,h) => s + h.par, 0);
