@@ -677,6 +677,32 @@ const ROUNDS = [
       { hole: 17, par: 3, strokes: 3, putts: 2 },
       { hole: 18, par: 5, strokes: 6, putts: 1 },
     ]
+  },
+  {
+    date: '2026-09-11',
+    course: 'Sharp Park Golf Course',
+    tees: 'White',
+    courseRating: 75.9, slope: 130, yardage: 6133,
+    holes: [
+      { hole: 1,  par: 4, strokes: 6, putts: 2 },
+      { hole: 2,  par: 4, strokes: 5, putts: 2 },
+      { hole: 3,  par: 4, strokes: 5, putts: 2 },
+      { hole: 4,  par: 5, strokes: 7, putts: 3 },
+      { hole: 5,  par: 3, strokes: 5, putts: 3 },
+      { hole: 6,  par: 4, strokes: 6, putts: 1 },
+      { hole: 7,  par: 4, strokes: 5, putts: 1 },
+      { hole: 8,  par: 3, strokes: 5, putts: 2 },
+      { hole: 9,  par: 5, strokes: 7, putts: 2 },
+      { hole: 10, par: 4, strokes: 6, putts: 2 },
+      { hole: 11, par: 4, strokes: 6, putts: 2 },
+      { hole: 12, par: 3, strokes: 4, putts: 2 },
+      { hole: 13, par: 5, strokes: 5, putts: 1 },
+      { hole: 14, par: 4, strokes: 8, putts: 2 },
+      { hole: 15, par: 3, strokes: 4, putts: 2 },
+      { hole: 16, par: 4, strokes: 6, putts: 3 },
+      { hole: 17, par: 4, strokes: 5, putts: 2 },
+      { hole: 18, par: 5, strokes: 7, putts: 3 },
+    ]
   }
 ];
 
@@ -1384,7 +1410,7 @@ function render(data) {
 
     return '<div class="card round-card">' +
       '<div class="round-header"><span class="round-course">' + round.course + '</span>' +
-      '<span class="round-meta">' + round.tees + (round.yardage ? ' · ' + round.yardage.toLocaleString() + ' yds' : '') + ' · CR ' + round.courseRating + '/' + round.slope + '</span></div>' +
+      '<span class="round-meta">' + round.tees + (round.yardage ? ' · ' + round.yardage.toLocaleString() + ' yds' : '') + (round.courseRating ? ' · CR ' + round.courseRating + '/' + round.slope : '') + '</span></div>' +
       '<div class="round-meta" style="margin-bottom:8px">' + round.date + '</div>' +
       '<div class="round-kpis">' +
         '<div class="round-kpi"><div class="round-kpi-label">Score</div><div class="round-kpi-value" style="color:' + scoreColor + '">' + totalStrokes + ' (' + (toPar>=0?'+':'') + toPar + ')</div></div>' +
