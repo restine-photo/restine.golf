@@ -808,7 +808,12 @@ function render(data) {
 
   const sessions = [...new Set(data.map(r => r.session_date))].sort();
 
-  document.getElementById('last-updated').textContent = sessions.length ? `Last session: ${sessions[sessions.length-1]}` : '';
+  const lastRangeDate = sessions.length ? sessions[sessions.length-1] : null;
+  const lastRoundDate = ROUNDS.length ? [...ROUNDS].sort((a,b) => new Date(b.date) - new Date(a.date))[0].date : null;
+  const headerParts = [];
+  if (lastRangeDate) headerParts.push('Last range: ' + lastRangeDate);
+  if (lastRoundDate) headerParts.push('Last round: ' + lastRoundDate);
+  document.getElementById('last-updated').textContent = headerParts.join('  ·  ');
 
   const totalShots = data.length;
   const avgSmash = avg(data.map(r => parseFloat(r.smash_factor)).filter(Boolean));
