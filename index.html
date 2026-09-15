@@ -628,7 +628,7 @@ let allData = [];
 const ROUNDS = [
   {
     date: '2026-09-04',
-    course: 'Half Moon Bay Ocean Course',
+    course: 'Half Moon Bay Ocean Course', location: 'Half Moon Bay, CA',
     tees: 'White (Women\'s)',
     courseRating: 74.8, slope: 133, yardage: 6081,
     holes: [
@@ -654,7 +654,7 @@ const ROUNDS = [
   },
   {
     date: '2026-09-10',
-    course: 'The Club at Ruby Hill',
+    course: 'The Club at Ruby Hill', location: 'Pleasanton, CA',
     tees: 'Red (Women\'s)',
     courseRating: 70.5, slope: 124, yardage: 5279,
     holes: [
@@ -680,7 +680,7 @@ const ROUNDS = [
   },
   {
     date: '2026-09-11',
-    course: 'Sharp Park Golf Course',
+    course: 'Sharp Park Golf Course', location: 'Pacifica, CA',
     tees: 'White',
     courseRating: 75.9, slope: 130, yardage: 6133,
     holes: [
@@ -706,7 +706,7 @@ const ROUNDS = [
   },
   {
     date: '2026-09-13',
-    course: 'Golf Club at Moffett Field',
+    course: 'Golf Club at Moffett Field', location: 'Mountain View, CA',
     tees: 'White (Women\'s)',
     courseRating: 76.3, slope: 130, yardage: 6338,
     holes: [
@@ -732,7 +732,7 @@ const ROUNDS = [
   },
   {
     date: '2026-09-14',
-    course: 'Blackhawk Country Club — Falls Course',
+    course: 'Blackhawk Country Club — Falls Course', location: 'Danville, CA',
     tees: 'White (Women\'s)',
     courseRating: 72.6, slope: 136, yardage: 5779,
     holes: [
@@ -1495,7 +1495,7 @@ function render(data) {
     return '<div class="card round-card">' +
       '<div class="round-header"><span class="round-course">' + round.course + '</span>' +
       '<span class="round-meta">' + round.tees + (round.yardage ? ' · ' + round.yardage.toLocaleString() + ' yds' : '') + (round.courseRating ? ' · CR ' + round.courseRating + '/' + round.slope : '') + '</span></div>' +
-      '<div class="round-meta" style="margin-bottom:8px">' + round.date + '</div>' +
+      '<div class="round-meta" style="margin-bottom:8px">' + round.date + (round.location ? ' · ' + round.location : '') + '</div>' +
       '<div class="round-kpis">' +
         '<div class="round-kpi"><div class="round-kpi-label">Score</div><div class="round-kpi-value" style="color:' + scoreColor + '">' + totalStrokes + ' (' + (toPar>=0?'+':'') + toPar + ')</div></div>' +
         '<div class="round-kpi"><div class="round-kpi-label">Front / Back</div><div class="round-kpi-value" style="font-size:14px;color:var(--text)">' + frontStrokes + ' / ' + backStrokes + '</div></div>' +
