@@ -989,7 +989,7 @@ function render(rawData) {
     const estHcp12Gap = hcp12 ? estCarry - hcp12.carry : null;
     const estLpgaGap = lpga ? estCarry - lpga.carry : null;
 
-    return '<tr><td>' + (CLUB_ABBR[s.club] || s.club) + '</td><td style="color:var(--muted)">' + s.count + '</td><td>' + s.avgCarry + ' yds</td><td>' + (s.avgTotal ? s.avgTotal + ' yds' : '<span style="color:var(--muted)">—</span>') + '</td><td>' + estCarryCell + '</td><td>' + estTotalCell + '</td><td>' + gapBadge(estHcp12Gap) + '</td><td>' + gapBadge(estCarryGap) + '</td><td>' + gapBadge(estLpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
+    return '<tr><td>' + (CLUB_ABBR[s.club] || s.club) + '</td><td style="color:var(--muted)">' + s.count + '</td><td><span style="font-size:12px">' + s.avgCarry + ' yds</span></td><td>' + (s.avgTotal ? '<span style="font-size:12px">' + s.avgTotal + ' yds</span>' : '<span style="color:var(--muted)">—</span>') + '</td><td>' + estCarryCell + '</td><td>' + estTotalCell + '</td><td>' + gapBadge(estHcp12Gap) + '</td><td>' + gapBadge(estCarryGap) + '</td><td>' + gapBadge(estLpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
   }).join('');
 
   const chartDefaults = {
