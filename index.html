@@ -7,16 +7,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   :root {
-    --bg: #0f1117;
-    --surface: #1a1d27;
-    --surface2: #22263a;
-    --border: rgba(255,255,255,0.08);
-    --text: #f0efec;
-    --muted: #7a7d8e;
-    --accent: #4ade9b;
-    --accent2: #6b8cff;
-    --danger: #ff6b6b;
-    --amber: #f5a623;
+    --bg: #ffffff;
+    --surface: #f7f7f5;
+    --surface2: #eef1ec;
+    --border: rgba(0,0,0,0.10);
+    --text: #1a1a1a;
+    --muted: #6b6f68;
+    --accent: #006747;
+    --accent2: #1a6e42;
+    --danger: #c0392b;
+    --amber: #b8860b;
     --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
     --font-sans: 'Inter', system-ui, sans-serif;
   }
@@ -46,7 +46,7 @@
   header h1 {
     font-family: var(--font-mono);
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 700;
     color: var(--accent);
     letter-spacing: 0.05em;
   }
@@ -82,7 +82,7 @@
   }
 
   #sheet-config button {
-    background: var(--accent2);
+    background: var(--accent);
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -110,7 +110,7 @@
   #setup-banner {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--accent2);
+    border-left: 3px solid var(--accent);
     border-radius: 8px;
     padding: 1.25rem 1.5rem;
     margin-bottom: 2rem;
@@ -154,7 +154,7 @@
 
   .kpi-value {
     font-size: 28px;
-    font-weight: 600;
+    font-weight: 700;
     font-family: var(--font-mono);
     color: var(--accent);
     line-height: 1;
@@ -169,7 +169,8 @@
   .section-label {
     font-size: 11px;
     font-family: var(--font-mono);
-    color: var(--muted);
+    color: var(--accent);
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-bottom: 1rem;
@@ -194,7 +195,8 @@
   .card-title {
     font-size: 12px;
     font-family: var(--font-mono);
-    color: var(--muted);
+    color: var(--accent);
+    font-weight: 700;
     margin-bottom: 1rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -234,7 +236,7 @@
 
   .club-table tr:last-child td { border-bottom: none; }
 
-  .club-table td:first-child { color: var(--accent2); }
+  .club-table td:first-child { color: var(--accent2); font-weight: 600; }
 
   .badge {
     display: inline-block;
@@ -244,9 +246,9 @@
     font-family: var(--font-mono);
   }
 
-  .badge-good { background: rgba(74,222,155,0.12); color: var(--accent); }
-  .badge-warn { background: rgba(245,166,35,0.12); color: var(--amber); }
-  .badge-bad  { background: rgba(255,107,107,0.12); color: var(--danger); }
+  .badge-good { background: rgba(0,103,71,0.10); color: var(--accent); }
+  .badge-warn { background: rgba(184,134,11,0.10); color: var(--amber); }
+  .badge-bad  { background: rgba(192,57,43,0.10); color: var(--danger); }
 
   .session-list { display: flex; flex-direction: column; gap: 6px; }
 
@@ -265,12 +267,12 @@
 
   .round-card { margin-bottom: 1.5rem; }
   .round-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
-  .round-course { font-size: 15px; font-weight: 600; color: var(--text); }
+  .round-course { font-size: 15px; font-weight: 700; color: var(--accent); }
   .round-meta { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
   .round-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0 16px; }
   .round-kpi { background: var(--surface2); border-radius: 8px; padding: 10px; text-align: center; }
   .round-kpi-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-family: var(--font-mono); }
-  .round-kpi-value { font-size: 18px; font-weight: 600; font-family: var(--font-mono); }
+  .round-kpi-value { font-size: 18px; font-weight: 700; font-family: var(--font-mono); }
   .hole-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--font-mono); }
   .hole-table th { text-align: center; color: var(--muted); font-weight: 400; padding: 4px 2px; border-bottom: 1px solid var(--border); font-size: 10px; }
   .hole-table td { text-align: center; padding: 5px 2px; color: var(--text); border-bottom: 1px solid var(--border); }
@@ -314,8 +316,8 @@
 
   #error-msg {
     display: none;
-    background: rgba(255,107,107,0.08);
-    border: 1px solid rgba(255,107,107,0.2);
+    background: rgba(192,57,43,0.06);
+    border: 1px solid rgba(192,57,43,0.2);
     border-radius: 8px;
     padding: 1rem 1.25rem;
     color: var(--danger);
@@ -336,9 +338,25 @@
     border-radius: 7px; cursor: pointer; transition: background 0.15s, color 0.15s;
   }
   .tab-btn:hover { color: var(--text); }
-  .tab-btn.active { background: var(--surface2); color: var(--accent); }
+  .tab-btn.active { background: var(--accent); color: #fff; }
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
+
+  .window-bar {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+  }
+  .window-label {
+    font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-right: 2px;
+  }
+  .window-btn {
+    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+    font-family: var(--font-mono); font-size: 12px; padding: 6px 12px;
+    border-radius: 7px; cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .window-btn:hover { color: var(--text); }
+  .window-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .window-note { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-left: 4px; }
 
   .insight-list { display: flex; flex-direction: column; gap: 8px; }
 
@@ -353,7 +371,7 @@
     gap: 12px;
   }
   .plan-club { display: flex; align-items: center; gap: 10px; min-width: 0; }
-  .plan-club-name { color: var(--accent2); font-family: var(--font-mono); font-weight: 600; font-size: 13px; flex-shrink: 0; }
+  .plan-club-name { color: var(--accent2); font-family: var(--font-mono); font-weight: 700; font-size: 13px; flex-shrink: 0; }
   .plan-reason { color: var(--muted); font-size: 12px; line-height: 1.4; }
   .plan-balls { font-family: var(--font-mono); color: var(--text); font-size: 13px; white-space: nowrap; flex-shrink: 0; }
   .plan-tier-label { font-size: 10px; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 12px 0 4px; }
@@ -393,7 +411,7 @@
   <h1>⛳ golf.stats</h1>
   <span id="last-updated"></span>
   <div id="sheet-config">
-    <button onclick="loadFromSheet()" id="refresh-btn" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--muted);">↻ Refresh</button>
+    <button onclick="loadFromSheet()" id="refresh-btn" style="background:transparent;border:1px solid rgba(0,0,0,0.15);color:var(--muted);">↻ Refresh</button>
     <span id="status"></span>
   </div>
 </header>
@@ -410,6 +428,13 @@
     </div>
 
     <div class="tab-panel active" id="tab-range">
+    <div class="window-bar" id="window-bar" style="display:none">
+      <span class="window-label">Show:</span>
+      <button class="window-btn" data-window="all" onclick="setSessionWindow('all')">All-time</button>
+      <button class="window-btn" data-window="5" onclick="setSessionWindow('5')">Last 5 sessions</button>
+      <button class="window-btn" data-window="3" onclick="setSessionWindow('3')">Last 3 sessions</button>
+      <span class="window-note" id="window-note"></span>
+    </div>
     <div class="kpi-row" id="kpi-row"></div>
 
     <div class="card" style="margin-bottom: 1.25rem;">
@@ -620,7 +645,7 @@ const LPGA_BENCHMARKS = {
   'Sand Wedge':      { carry: 85,  smash: 1.21 },
   'Lob Wedge':       { carry: 70,  smash: 1.16 },
 };
-const COLORS = ['#6b8cff','#4ade9b','#f5a623','#ff6b6b','#a78bfa','#38bdf8','#fb7185','#34d399','#fbbf24','#60a5fa'];
+const COLORS = ['#006747','#1a6e42','#b8860b','#c0392b','#7d5ba6','#2980b9','#c0392b','#27ae60','#d4a017','#2471a3'];
 
 let charts = {};
 let allData = [];
@@ -822,7 +847,40 @@ function clubKey(club) {
   return map[club] || club;
 }
 
-function render(data) {
+let fullData = [];
+let sessionWindow = 'all'; // 'all' | '5' | '3' — number of most-recent sessions to include
+
+function setSessionWindow(w) {
+  sessionWindow = w;
+  document.querySelectorAll('.window-btn').forEach(b => b.classList.toggle('active', b.dataset.window === w));
+  localStorage.setItem('golf_session_window', w);
+  render(fullData);
+}
+
+function render(rawData) {
+  fullData = rawData; // always keep the true full dataset so the toggle can re-slice without re-fetching
+
+  // Apply the session-window filter once, here, so every downstream consumer
+  // (KPIs, club table, charts, insights, practice plan) sees the same slice.
+  const allSessionsSorted = [...new Set(rawData.map(r => r.session_date))].sort();
+  let sessionsInWindow = allSessionsSorted;
+  if (sessionWindow !== 'all') {
+    const n = parseInt(sessionWindow, 10);
+    sessionsInWindow = allSessionsSorted.slice(-n);
+  }
+  const data = sessionWindow === 'all' ? rawData : rawData.filter(r => sessionsInWindow.includes(r.session_date));
+
+  const windowBar = document.getElementById('window-bar');
+  const windowNote = document.getElementById('window-note');
+  if (windowBar) {
+    windowBar.style.display = allSessionsSorted.length >= 2 ? 'flex' : 'none';
+    if (windowNote) {
+      windowNote.textContent = sessionWindow === 'all'
+        ? '(' + allSessionsSorted.length + ' sessions)'
+        : '(' + sessionsInWindow.length + ' of ' + allSessionsSorted.length + ' sessions, ' + sessionsInWindow[0] + ' to ' + sessionsInWindow[sessionsInWindow.length-1] + ')';
+    }
+  }
+
   allData = data;
   const byClub = groupByClub(data);
 
@@ -832,7 +890,7 @@ function render(data) {
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
   });
 
-  const sessions = [...new Set(data.map(r => r.session_date))].sort();
+  const sessions = sessionsInWindow;
 
   const lastRangeDate = sessions.length ? sessions[sessions.length-1] : null;
   const lastRoundDate = ROUNDS.length ? [...ROUNDS].sort((a,b) => new Date(b.date) - new Date(a.date))[0].date : null;
@@ -938,8 +996,8 @@ function render(data) {
     responsive: true, maintainAspectRatio: false,
     plugins: { legend: { display: false } },
     scales: {
-      x: { ticks: { color: '#7a7d8e', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
-      y: { ticks: { color: '#7a7d8e', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      x: { ticks: { color: '#6b6f68', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
+      y: { ticks: { color: '#6b6f68', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } }
     }
   };
 
@@ -950,7 +1008,7 @@ function render(data) {
       labels: clubStats.map(s => s.club),
       datasets: [{
         data: clubStats.map(s => parseFloat(s.avgSmash.toFixed(2))),
-        backgroundColor: clubStats.map(s => s.avgSmash >= 1.30 ? '#4ade9bcc' : s.avgSmash >= 1.20 ? '#f5a623cc' : '#ff6b6bcc'),
+        backgroundColor: clubStats.map(s => s.avgSmash >= 1.30 ? '#006747cc' : s.avgSmash >= 1.20 ? '#b8860bcc' : '#c0392bcc'),
         borderRadius: 4, borderSkipped: false,
         label: 'Smash'
       }]
@@ -965,7 +1023,7 @@ function render(data) {
       labels: clubStats.map(s => s.club),
       datasets: [{
         data: clubStats.map(s => s.avgSpeed),
-        backgroundColor: '#6b8cffcc',
+        backgroundColor: '#1a6e42cc',
         borderRadius: 4, borderSkipped: false,
         label: 'Avg club speed'
       }]
@@ -980,7 +1038,7 @@ function render(data) {
       labels: clubStats.map(s => s.club),
       datasets: [{
         data: clubStats.map(s => s.spread),
-        backgroundColor: clubStats.map(s => s.spread <= 15 ? '#4ade9bcc' : s.spread <= 25 ? '#f5a623cc' : '#ff6b6bcc'),
+        backgroundColor: clubStats.map(s => s.spread <= 15 ? '#006747cc' : s.spread <= 25 ? '#b8860bcc' : '#c0392bcc'),
         borderRadius: 4, borderSkipped: false,
         label: 'Carry spread'
       }]
@@ -1084,7 +1142,7 @@ function render(data) {
       labels: speedClubs.map(s => CLUB_ABBR[s.club] || s.club),
       datasets: [{
         data: speedGapValues,
-        backgroundColor: speedGapValues.map(v => v >= 0 ? '#4ade9bcc' : '#ff6b6bcc'),
+        backgroundColor: speedGapValues.map(v => v >= 0 ? '#006747cc' : '#c0392bcc'),
         borderRadius: 4, borderSkipped: false,
         label: 'Speed gap vs scratch'
       }]
@@ -1096,8 +1154,8 @@ function render(data) {
         return ' ' + (v >= 0 ? '+' : '') + Math.round(v) + ' mph vs female scratch';
       }}}},
       scales: {
-        x: { ticks: { color: '#7a7d8e', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y: { ticks: { color: '#7a7d8e', font: { size: 11 }, callback: v => (v >= 0 ? '+' : '') + v }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        x: { ticks: { color: '#6b6f68', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        y: { ticks: { color: '#6b6f68', font: { size: 11 }, callback: v => (v >= 0 ? '+' : '') + v }, grid: { color: 'rgba(0,0,0,0.06)' } }
       }
     }
   });
@@ -1113,7 +1171,7 @@ function render(data) {
       labels: gapClubs.map(s => s.club),
       datasets: [{
         data: gapValues,
-        backgroundColor: gapValues.map(v => v >= 0 ? '#4ade9bcc' : '#ff6b6bcc'),
+        backgroundColor: gapValues.map(v => v >= 0 ? '#006747cc' : '#c0392bcc'),
         borderRadius: 4, borderSkipped: false,
         label: 'Gap vs female scratch carry'
       }]
@@ -1126,8 +1184,8 @@ function render(data) {
         return ` ${sign}${Math.round(v)} yds vs female scratch`;
       }}}},
       scales: {
-        x: { ticks: { color: '#7a7d8e', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        y: { ticks: { color: '#7a7d8e', font: { size: 11 }, callback: v => (v >= 0 ? '+' : '') + v + ' y' }, grid: { color: 'rgba(255,255,255,0.05)' }, border: { dash: [4,4] } }
+        x: { ticks: { color: '#6b6f68', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        y: { ticks: { color: '#6b6f68', font: { size: 11 }, callback: v => (v >= 0 ? '+' : '') + v + ' y' }, grid: { color: 'rgba(0,0,0,0.06)' }, border: { dash: [4,4] } }
       }
     }
   });
@@ -1192,25 +1250,25 @@ function render(data) {
         txt += ' Dispersion tightened on ' + tightening + ' club' + (tightening > 1 ? 's' : '')
              + ' at the same time — that pairing usually means swinging more within yourself, though fatigue looks the same in the data.';
       }
-      insights.push({ group: 'Headline', color: dir === 'down' ? '#f5a623' : '#4ade9b', text: txt });
+      insights.push({ group: 'Headline', color: dir === 'down' ? '#b8860b' : '#006747', text: txt });
     }
   }
 
   // ---------- IMPROVING ----------
   deltas.filter(d => d.dSpread !== null && d.dSpread <= -10).sort((a,b) => a.dSpread - b.dSpread).forEach(d => {
-    insights.push({ group: 'Improving', color: '#4ade9b',
+    insights.push({ group: 'Improving', color: '#006747',
       text: d.label + ' dispersion tightened ' + Math.abs(d.dSpread) + ' yds (' + d.P.spread + ' to ' + d.L.spread
           + ' yd spread) while carry held at ' + d.L.carry + ' yds. Same distance, far more repeatable.' });
   });
   deltas.filter(d => d.dCarry !== null && d.dCarry >= 6 && d.dSpread > -10).forEach(d => {
-    insights.push({ group: 'Improving', color: '#4ade9b',
+    insights.push({ group: 'Improving', color: '#006747',
       text: d.label + ' carry up ' + d.dCarry + ' yds (' + d.P.carry + ' to ' + d.L.carry + ')'
           + (d.dSpeed > 0 ? ', with club speed up ' + d.dSpeed + ' mph.' : '.') });
   });
 
   // ---------- WATCH ----------
   deltas.filter(d => d.dSpread !== null && d.dSpread >= 12).sort((a,b) => b.dSpread - a.dSpread).forEach(d => {
-    insights.push({ group: 'Watch', color: '#ff6b6b',
+    insights.push({ group: 'Watch', color: '#c0392b',
       text: d.label + ' dispersion widened ' + d.dSpread + ' yds (' + d.P.spread + ' to ' + d.L.spread + '). Check for a few outlier strikes rather than a general decline.' });
   });
   const worst = [...latestRows.reduce((m, r) => {
@@ -1219,7 +1277,7 @@ function render(data) {
    .filter(x => x.n >= MIN_SHOTS && x.spread > 30)
    .sort((a,b) => b.spread - a.spread)[0];
   if (worst && !deltas.some(d => d.club === worst.club && d.dSpread >= 12)) {
-    insights.push({ group: 'Watch', color: '#f5a623',
+    insights.push({ group: 'Watch', color: '#b8860b',
       text: (CLUB_ABBR[worst.club] || worst.club) + ' was your loosest club on ' + latestDate
           + ' — ' + worst.spread + ' yd spread over ' + worst.n + ' shots. Biggest single scoring opportunity.' });
   }
@@ -1227,17 +1285,17 @@ function render(data) {
   // ---------- TOO EARLY ----------
   if (noBaseline.length) {
     const names = noBaseline.map(t => (CLUB_ABBR[t.club] || t.club) + ' (' + t.n + ')').join(', ');
-    insights.push({ group: 'Too early to say', color: '#7a7d8e',
+    insights.push({ group: 'Too early to say', color: '#6b6f68',
       text: names + ' — first session logged for ' + (noBaseline.length > 1 ? 'these clubs' : 'this club')
           + ', so there is nothing to compare against yet. Baseline set.' });
   }
   if (thinClubs.length) {
     const names = thinClubs.map(t => (CLUB_ABBR[t.club] || t.club) + ' (' + t.n + ')').join(', ');
-    insights.push({ group: 'Too early to say', color: '#7a7d8e',
+    insights.push({ group: 'Too early to say', color: '#6b6f68',
       text: names + ' — too few shots to read a trend. Treat any change on these as noise.' });
   }
 
-  if (!insights.length) insights.push({ group: 'Context', color: '#6b8cff',
+  if (!insights.length) insights.push({ group: 'Context', color: '#1a6e42',
     text: 'Log another session to unlock session-over-session pattern detection.' });
 
   document.getElementById('insights').innerHTML = (() => {
@@ -1403,12 +1461,12 @@ function render(data) {
     const leakShare = Math.round(100 * Math.max(totalPuttingLost, totalTeeToGreenLost)
       / Math.max(1, totalPuttingLost + totalTeeToGreenLost));
 
-    roundInsights.push({ group: cumLabel, color: '#6b8cff',
+    roundInsights.push({ group: cumLabel, color: '#1a6e42',
       text: 'Averaging ' + (avgToPar>=0?'+':'') + avgToPar + ' to par across ' + summaries.length + ' rounds. Of the strokes lost to par, ~'
           + Math.round(totalPuttingLost / summaries.length * 10) / 10 + '/round come from putting and ~'
           + Math.round(totalTeeToGreenLost / summaries.length * 10) / 10 + '/round from tee-to-green.' });
 
-    roundInsights.push({ group: cumLabel, color: biggerLeak === 'putting' ? '#ff6b6b' : '#f5a623',
+    roundInsights.push({ group: cumLabel, color: biggerLeak === 'putting' ? '#c0392b' : '#b8860b',
       text: (biggerLeak === 'putting' ? 'Putting' : 'Tee-to-green play') + ' is the bigger leak right now, responsible for ~'
           + leakShare + '% of strokes lost to par. ' + totalThreePutts + ' three-putts across ' + totalHoles + ' holes logged — '
           + (biggerLeak === 'putting'
@@ -1418,11 +1476,11 @@ function render(data) {
     if (summaries.length >= 2) {
       const girTrend = latest.gir - avg(prior.map(s => s.gir));
       if (girTrend <= -3) {
-        roundInsights.push({ group: cumLabel, color: '#f5a623',
+        roundInsights.push({ group: cumLabel, color: '#b8860b',
           text: 'GIR dropped ' + Math.abs(Math.round(girTrend)) + ' holes vs your ' + prior.length + '-round average ('
               + Math.round(avg(prior.map(s=>s.gir))*10)/10 + ' → ' + latest.gir + '). If ball-striking felt off, check tempo and setup before the next range session rather than assuming it is a swing-mechanics regression from one bad day.' });
       } else if (girTrend >= 3) {
-        roundInsights.push({ group: cumLabel, color: '#4ade9b',
+        roundInsights.push({ group: cumLabel, color: '#006747',
           text: 'GIR jumped ' + Math.round(girTrend) + ' holes vs your ' + prior.length + '-round average ('
               + Math.round(avg(prior.map(s=>s.gir))*10)/10 + ' → ' + latest.gir + '). Worth noting what felt different in warmup or swing thoughts so it is repeatable.' });
       }
@@ -1431,13 +1489,13 @@ function render(data) {
     // --- Latest round: diagnose the single biggest scoring impact and suggest a fix ---
     const l = latest;
     if (l.puttingLost >= l.teeToGreenLost && l.puttingLost >= 3) {
-      roundInsights.push({ group: latestLabel, color: '#ff6b6b',
+      roundInsights.push({ group: latestLabel, color: '#c0392b',
         text: 'Putting cost you an estimated ' + l.puttingLost + ' strokes this round (' + l.threePutts + ' three-putts), vs ~'
             + l.teeToGreenLost + ' lost tee-to-green. The putter was the bigger factor in this score'
             + (l.gir >= 8 ? ' — approach play was solid (' + l.gir + '/18 GIR), so the strokes are being given back on the green.' : '.')
             + ' Suggested focus: a lag-putting ladder drill (increasing distances, target a 3ft circle) to cut three-putts before working on short putts.' });
     } else if (l.teeToGreenLost > l.puttingLost && l.gir <= 6) {
-      roundInsights.push({ group: latestLabel, color: '#ff6b6b',
+      roundInsights.push({ group: latestLabel, color: '#c0392b',
         text: 'Tee-to-green play cost you an estimated ' + l.teeToGreenLost + ' strokes this round vs ~' + l.puttingLost
             + ' lost putting. Only ' + l.gir + '/18 greens hit — approach shots and ball-striking are the bigger leak here. '
             + 'Suggested focus: check the Range tab for which club has the widest recent dispersion and prioritize it next session.' });
@@ -1446,14 +1504,14 @@ function render(data) {
     if (l.worstHole.strokes - l.worstHole.par >= 2) {
       const wh = l.worstHole;
       const whPutting = wh.putts >= 3;
-      roundInsights.push({ group: latestLabel, color: '#f5a623',
+      roundInsights.push({ group: latestLabel, color: '#b8860b',
         text: 'Hole ' + wh.hole + ' (par ' + wh.par + ') was the worst of the round at ' + wh.strokes + ' strokes. '
             + (whPutting
                ? 'That hole alone had ' + wh.putts + ' putts — a three-putt on a blow-up hole compounds the damage. Worth a two-putt-max mindset once you are already in trouble off the tee or approach.'
                : 'The damage came before the green, not on it — a mis-hit tee shot or approach is the more likely root cause on this one.') });
     }
   } else {
-    roundInsights.push({ group: 'Context', color: '#6b8cff', text: 'Log a round to unlock insights here.' });
+    roundInsights.push({ group: 'Context', color: '#1a6e42', text: 'Log a round to unlock insights here.' });
   }
 
   document.getElementById('round-insights').innerHTML = (() => {
@@ -1533,6 +1591,9 @@ async function loadFromSheet() {
     if (!data.length || !data[0].carry_distance_yards) throw new Error('CSV missing expected columns. Check your sheet format.');
     document.getElementById('loading').style.display = 'none';
     document.getElementById('status').textContent = `✓ ${data.length} shots loaded`;
+    const savedWindow = localStorage.getItem('golf_session_window');
+    if (savedWindow) sessionWindow = savedWindow;
+    document.querySelectorAll('.window-btn').forEach(b => b.classList.toggle('active', b.dataset.window === sessionWindow));
     render(data);
   } catch(e) {
     document.getElementById('loading').style.display = 'none';
