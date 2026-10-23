@@ -958,9 +958,15 @@ function render(rawData) {
   const byClub = groupByClub(data);
 
   const clubs = Object.keys(byClub).sort((a,b) => {
+    const aLoft = CLUB_LOFT[a];
+    const bLoft = CLUB_LOFT[b];
+    if (aLoft !== undefined && bLoft !== undefined) return aLoft - bLoft;
+    // Fall back to bag order for any club with no known loft, so it still sorts
+    // sensibly instead of landing wherever Object.keys happened to put it.
     const ai = CLUB_ORDER.indexOf(clubKey(a));
     const bi = CLUB_ORDER.indexOf(clubKey(b));
-    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    if (aLoft === undefined && bLoft === undefined) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    return aLoft === undefined ? 1 : -1;
   });
 
   const sessions = sessionsInWindow;
