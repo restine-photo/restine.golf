@@ -453,6 +453,7 @@
         <thead>
           <tr>
             <th>Club</th>
+            <th>Loft</th>
             <th>#</th>
             <th>Carry</th>
             <th>Total</th>
@@ -837,6 +838,7 @@ const ROUNDS = [
 
 const CLUB_ABBR = {
   'Driver': 'DR',
+  'Mini Driver': 'MDR',
   '3 Wood': '3W',
   '5 Wood': '5W',
   '7 Wood': '7W',
@@ -850,6 +852,25 @@ const CLUB_ABBR = {
   'Approach Wedge': 'AW',
   'Sand Wedge': 'SW',
   'Lob Wedge': 'LW',
+};
+
+// Loft (degrees) per club — from current bag spec
+const CLUB_LOFT = {
+  'Driver': 9,
+  'Mini Driver': 11.5,
+  '3 Wood': 15,
+  '5 Wood': 18,
+  '7 Wood': 21,
+  '4 Iron': 20,
+  '5 Iron': 23,
+  '6 Iron': 26.5,
+  '7 Iron': 30,
+  '8 Iron': 34,
+  '9 Iron': 39,
+  'Pitching Wedge': 44,
+  'Approach Wedge': 49,
+  'Sand Wedge': 54,
+  'Lob Wedge': 58,
 };
 
 function smashBadge(v) {
@@ -1041,7 +1062,8 @@ function render(rawData) {
     const estHcp12Gap = hcp12 ? estCarry - hcp12.carry : null;
     const estLpgaGap = lpga ? estCarry - lpga.carry : null;
 
-    return '<tr><td>' + (CLUB_ABBR[s.club] || s.club) + '</td><td style="color:var(--muted)">' + s.count + '</td><td><span style="font-size:12px">' + s.avgCarry + ' yds</span></td><td>' + (s.avgTotal ? '<span style="font-size:12px">' + s.avgTotal + ' yds</span>' : '<span style="color:var(--muted)">—</span>') + '</td><td>' + estCarryCell + '</td><td>' + estTotalCell + '</td><td>' + gapBadge(estHcp12Gap) + '</td><td>' + gapBadge(estCarryGap) + '</td><td>' + gapBadge(estLpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
+    const loftCell = CLUB_LOFT[s.club] !== undefined ? '<span style="font-size:12px;color:var(--muted)">' + CLUB_LOFT[s.club] + '°</span>' : '<span style="color:var(--muted)">—</span>';
+    return '<tr><td>' + (CLUB_ABBR[s.club] || s.club) + '</td><td>' + loftCell + '</td><td style="color:var(--muted)">' + s.count + '</td><td><span style="font-size:12px">' + s.avgCarry + ' yds</span></td><td>' + (s.avgTotal ? '<span style="font-size:12px">' + s.avgTotal + ' yds</span>' : '<span style="color:var(--muted)">—</span>') + '</td><td>' + estCarryCell + '</td><td>' + estTotalCell + '</td><td>' + gapBadge(estHcp12Gap) + '</td><td>' + gapBadge(estCarryGap) + '</td><td>' + gapBadge(estLpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
   }).join('');
 
   const chartDefaults = {
