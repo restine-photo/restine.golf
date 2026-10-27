@@ -370,6 +370,11 @@
     margin-bottom: 6px;
     gap: 12px;
   }
+  .plan-row { cursor: pointer; }
+  .plan-row.done { opacity: 0.5; }
+  .plan-row.done .plan-balls { text-decoration: line-through; }
+  .plan-row input[type=checkbox] { accent-color: var(--accent); width: 20px; height: 20px; flex-shrink: 0; cursor: pointer; }
+  .plan-total a { color: var(--accent2); }
   .plan-club { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .plan-club-name { color: var(--accent2); font-family: var(--font-mono); font-weight: 700; font-size: 13px; flex-shrink: 0; }
   .plan-reason { color: var(--muted); font-size: 12px; line-height: 1.4; }
@@ -424,6 +429,7 @@
   <div id="content">
     <div class="tab-bar">
       <button class="tab-btn active" data-tab="range" onclick="switchTab('range')">Range</button>
+      <button class="tab-btn" data-tab="practice" onclick="switchTab('practice')">Practice</button>
       <button class="tab-btn" data-tab="rounds" onclick="switchTab('rounds')">Rounds</button>
     </div>
 
@@ -440,11 +446,6 @@
     <div class="card" style="margin-bottom: 1.25rem;">
       <p class="card-title">Key insights</p>
       <div class="insight-list" id="insights"></div>
-    </div>
-
-    <div class="card" style="margin-bottom: 1.25rem;">
-      <p class="card-title">Next practice session</p>
-      <div id="practice-plan"></div>
     </div>
 
     <p class="section-label">Club averages</p>
@@ -551,6 +552,13 @@
     <p class="section-label" style="margin-top:2rem">Sessions</p>
     <div class="card" style="margin-bottom: 2rem;">
       <div class="session-list" id="session-list"></div>
+    </div>
+    </div>
+
+    <div class="tab-panel" id="tab-practice">
+    <div class="card" style="margin-bottom: 1.25rem;">
+      <p class="card-title">Next practice session</p>
+      <div id="practice-plan"></div>
     </div>
     </div>
 
@@ -928,6 +936,196 @@ function setSessionWindow(w) {
   document.querySelectorAll('.window-btn').forEach(b => b.classList.toggle('active', b.dataset.window === w));
   localStorage.setItem('golf_session_window', w);
   render(fullData);
+}
+
+// ---------- Practice tab ----------
+// Plan is independent of the Range session-window toggle: ball budget comes from the
+// last 3 sessions, club status (unlogged / thin / loose) comes from full history because
+// "thin sample" is a lifetime question, and spread uses each club's most recent 5+ shot session.
+const PACE_BALLS_PER_MIN = 1.5; // rough range pace including routine and rest between shots
+const PUTTING_MINUTES = { '30': 8, '60': 15, 'full': 20 };
+let practiceMode = 'full';
+try { practiceMode = localStorage.getItem('golf_practice_mode') || 'full'; } catch (e) {}
+if (!['30', '60', 'full'].includes(practiceMode)) practiceMode = 'full';
+const practiceMem = {}; // in-memory copy so checkboxes still work if storage is blocked
+
+function getPracticeDone(sig) {
+  if (practiceMem[sig] === undefined) {
+    let saved = [];
+    try { saved = JSON.parse(localStorage.getItem('golf_practice_done:' + sig) || '[]'); } catch (e) {}
+    practiceMem[sig] = Array.isArray(saved) ? saved : [];
+  }
+  return practiceMem[sig];
+}
+function savePracticeDone(sig) {
+  try { localStorage.setItem('golf_practice_done:' + sig, JSON.stringify(practiceMem[sig] || [])); } catch (e) {}
+}
+function togglePracticeItem(sig, id) {
+  const done = getPracticeDone(sig);
+  const i = done.indexOf(id);
+  if (i === -1) done.push(id); else done.splice(i, 1);
+  savePracticeDone(sig);
+  renderPractice();
+}
+function resetPractice(sig) {
+  practiceMem[sig] = [];
+  savePracticeDone(sig);
+  renderPractice();
+}
+function setPracticeMode(m) {
+  practiceMode = m;
+  try { localStorage.setItem('golf_practice_mode', m); } catch (e) {}
+  renderPractice();
+}
+
+function renderPractice() {
+  const el = document.getElementById('practice-plan');
+  if (!el || !fullData.length) return;
+  const all = fullData;
+  const allSessions = [...new Set(all.map(r => r.session_date))].sort();
+  const recent = allSessions.slice(-3);
+  const avgBucket = Math.round(all.filter(r => recent.includes(r.session_date)).length / recent.length);
+  const latestDate = allSessions[allSessions.length - 1];
+
+  // Time box -> ball budget. Putting time comes off the clock first.
+  const hasRounds = ROUNDS.length > 0;
+  const puttMin = hasRounds ? PUTTING_MINUTES[practiceMode] : 0;
+  const budget = practiceMode === 'full'
+    ? avgBucket
+    : Math.max(0, Math.min(avgBucket, Math.round((parseInt(practiceMode, 10) - puttMin) * PACE_BALLS_PER_MIN)));
+
+  const FULL_BAG = ['Driver','3 Wood','5 Wood','7 Wood','5 Iron','6 Iron','7 Iron','8 Iron','9 Iron',
+                    'Pitching Wedge','Approach Wedge','Sand Wedge','Lob Wedge'];
+  const MIN_TRUST = 15; // shots needed before a club's numbers are trustworthy
+
+  const bagStats = FULL_BAG.map(club => {
+    const rows = all.filter(r => (r.club_full || r.club) === club);
+    if (!rows.length) return { club, n: 0, status: 'unlogged' };
+    const carries = rows.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean);
+    const lifetimeSpread = carries.length ? Math.round(Math.max(...carries) - Math.min(...carries)) : null;
+    let recentSpread = lifetimeSpread, recentN = rows.length, recentDate = null;
+    for (let i = allSessions.length - 1; i >= 0; i--) {
+      const sRows = rows.filter(r => r.session_date === allSessions[i]);
+      if (sRows.length >= 5) {
+        const sCarries = sRows.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean);
+        recentSpread = Math.round(Math.max(...sCarries) - Math.min(...sCarries));
+        recentN = sRows.length;
+        recentDate = allSessions[i];
+        break;
+      }
+    }
+    return { club, n: rows.length, spread: recentSpread, recentN, recentDate, lifetimeSpread,
+      status: rows.length < MIN_TRUST ? 'thin' : 'established' };
+  });
+
+  const unlogged = bagStats.filter(s => s.status === 'unlogged');
+  const thin = bagStats.filter(s => s.status === 'thin');
+  const established = bagStats.filter(s => s.status === 'established');
+  const loose = established.filter(s => s.spread !== null && s.spread > 30).sort((a,b) => b.spread - a.spread);
+  const solid = established.filter(s => s.spread !== null && s.spread <= 30);
+
+  // Priority: data gaps, then known dispersion issues, then thin samples, then maintenance.
+  const plan = [];
+  let remaining = budget;
+  const allocate = (list, perClub, tier, reasonFn) => {
+    list.forEach(s => {
+      if (remaining <= 0) return;
+      const balls = Math.min(perClub, remaining);
+      if (balls < 4) return; // not worth a line item under 4 balls
+      plan.push({ club: s.club, balls, tier, reason: reasonFn(s) });
+      remaining -= balls;
+    });
+  };
+  allocate(unlogged, 9, 'Data gap — zero shots logged',
+    () => 'Never logged. In your bag, but the dashboard has no read on it yet.');
+  allocate(loose, 14, 'Known issue — wide dispersion',
+    s => s.spread + ' yd carry spread on ' + s.recentDate + ' (' + s.recentN + ' shots) — widest recent session.');
+  allocate(thin, 9, 'Thin sample — needs volume',
+    s => 'Only ' + s.n + ' shots logged. Too few to trust an average or spot a trend.');
+  allocate(solid, 5, 'Maintenance',
+    s => s.spread + ' yd spread on ' + s.recentDate + ' — already reliable, just confirm it holds.');
+  if (remaining > 4 && solid.length) {
+    const best = [...solid].sort((a,b) => a.spread - b.spread)[0];
+    const existing = plan.find(p => p.club === best.club);
+    if (existing) existing.balls += remaining;
+    else plan.push({ club: best.club, balls: remaining, tier: 'Maintenance', reason: 'Extra reps on your most consistent club.' });
+    remaining = 0;
+  }
+
+  // Putting / tee-to-green split from the last 3 rounds.
+  let green = null;
+  if (hasRounds) {
+    const last = [...ROUNDS].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
+    const per = last.map(r => {
+      const par = r.holes.reduce((s,h) => s + h.par, 0);
+      const strokes = r.holes.reduce((s,h) => s + h.strokes, 0);
+      const putts = r.holes.reduce((s,h) => s + h.putts, 0);
+      const lost = r.holes.reduce((s,h) => s + Math.max(0, h.putts - 2), 0);
+      return { putts, lost, ttg: (strokes - par) - lost, three: r.holes.filter(h => h.putts >= 3).length };
+    });
+    green = {
+      n: per.length,
+      putts: Math.round(avg(per.map(p => p.putts))),
+      lost: Math.round(avg(per.map(p => p.lost))),
+      ttg: Math.round(avg(per.map(p => p.ttg))),
+      three: per.reduce((s,p) => s + p.three, 0)
+    };
+  }
+
+  const sig = latestDate + '|' + practiceMode;
+  const done = getPracticeDone(sig);
+  const blockIds = plan.map(p => p.club).concat(green ? ['putting'] : []);
+  const doneCount = blockIds.filter(id => done.includes(id)).length;
+
+  const row = (id, name, reason, qty) => {
+    const isDone = done.includes(id);
+    return '<label class="plan-row' + (isDone ? ' done' : '') + '"><div class="plan-club">'
+      + '<input type="checkbox"' + (isDone ? ' checked' : '') + ' onchange="togglePracticeItem(\'' + sig + '\', \'' + id + '\')">'
+      + '<span class="plan-club-name">' + name + '</span><span class="plan-reason">' + reason + '</span></div>'
+      + '<span class="plan-balls">' + qty + '</span></label>';
+  };
+
+  const modes = [['30', '30 min'], ['60', '60 min'], ['full', 'Full bucket']];
+  let out = '<div class="window-bar">'
+    + modes.map(m => '<button class="window-btn' + (practiceMode === m[0] ? ' active' : '') + '" onclick="setPracticeMode(\'' + m[0] + '\')">' + m[1] + '</button>').join('')
+    + '<span class="window-note">~' + budget + ' balls' + (puttMin ? ' + ' + puttMin + ' min putting' : '') + '</span></div>';
+
+  if (green) {
+    out += '<p style="font-size:12px;color:var(--muted);margin-bottom:6px">Last ' + green.n + ' rounds: getting to the green cost about '
+      + green.ttg + ' strokes a round, putting about ' + green.lost + ' (' + green.putts + ' putts a round, ' + green.three + ' three-putts total).</p>';
+  }
+  if (plan.length) {
+    out += '<p style="font-size:12px;color:var(--muted);margin-bottom:12px">Range priority: '
+      + (CLUB_ABBR[plan[0].club] || plan[0].club) + ' — ' + plan[0].tier.toLowerCase() + '.</p>';
+  }
+
+  let tier = null;
+  plan.forEach(p => {
+    if (p.tier !== tier) {
+      tier = p.tier;
+      out += '<p class="plan-tier-label">' + tier + '</p>';
+    }
+    out += row(p.club, CLUB_ABBR[p.club] || p.club, p.reason, p.balls + ' balls');
+  });
+  if (green) {
+    out += '<p class="plan-tier-label">Finish on the green — from your rounds</p>';
+    out += row('putting', 'Putting',
+      green.putts + ' putts a round and ' + green.three + ' three-putts across your last ' + green.n
+      + ' rounds. Try: lag putts from 30–40 ft into a 3-ft circle, then 10 straight makes from 3 ft.',
+      puttMin + ' min');
+  }
+
+  const used = plan.reduce((s,p) => s + p.balls, 0);
+  out += '<div class="plan-total"><span>' + doneCount + ' of ' + blockIds.length + ' blocks done'
+    + (doneCount ? ' · <a href="#" onclick="resetPractice(\'' + sig + '\'); return false;">reset</a>' : '')
+    + '</span><span>' + used + ' / ' + budget + ' balls</span></div>';
+  const covered = new Set(plan.map(p => p.club));
+  const skipped = FULL_BAG.filter(c => !covered.has(c));
+  if (skipped.length) {
+    out += '<p style="font-size:11px;color:var(--muted);margin-top:10px">Not in this bucket: '
+      + skipped.map(c => CLUB_ABBR[c] || c).join(', ') + '. Rotate these in next session.</p>';
+  }
+  el.innerHTML = out;
 }
 
 function render(rawData) {
@@ -1396,98 +1594,7 @@ function render(rawData) {
     return `<div class="session-row"><span class="session-date">${date}</span><span class="session-shots">${shots} shots · ${clubs.length} clubs</span></div>`;
   }).join('');
 
-  // ---------- Next practice session plan ----------
-  const FULL_BAG = ['Driver','3 Wood','5 Wood','7 Wood','5 Iron','6 Iron','7 Iron','8 Iron','9 Iron',
-                     'Pitching Wedge','Approach Wedge','Sand Wedge','Lob Wedge'];
-  const MIN_TRUST = 15; // shots needed before a club's numbers are trustworthy
-
-  // Average balls per session, based on total shots / total sessions logged so far.
-  const totalBalls = Math.round(data.length / sessions.length);
-
-  const bagStats = FULL_BAG.map(club => {
-    const rows = data.filter(r => (r.club_full || r.club) === club);
-    if (!rows.length) return { club, n: 0, status: 'unlogged' };
-    const carries = rows.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean);
-    const lifetimeSpread = carries.length ? Math.round(Math.max(...carries) - Math.min(...carries)) : null;
-    // Use the most recent session with 5+ shots of this club for "current" spread,
-    // so an early bad session doesn't overstate a club that's since tightened up.
-    let recentSpread = lifetimeSpread, recentN = rows.length, recentDate = null;
-    for (let i = sessions.length - 1; i >= 0; i--) {
-      const sRows = rows.filter(r => r.session_date === sessions[i]);
-      if (sRows.length >= 5) {
-        const sCarries = sRows.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean);
-        recentSpread = Math.round(Math.max(...sCarries) - Math.min(...sCarries));
-        recentN = sRows.length;
-        recentDate = sessions[i];
-        break;
-      }
-    }
-    return { club, n: rows.length, spread: recentSpread, recentN, recentDate, lifetimeSpread,
-      status: rows.length < MIN_TRUST ? 'thin' : 'established' };
-  });
-
-  const unlogged   = bagStats.filter(s => s.status === 'unlogged');
-  const thin       = bagStats.filter(s => s.status === 'thin');
-  const established = bagStats.filter(s => s.status === 'established');
-  const loose = established.filter(s => s.spread !== null && s.spread > 30).sort((a,b) => b.spread - a.spread);
-  const solid = established.filter(s => s.spread !== null && s.spread <= 30);
-
-  // Budget: unlogged clubs get priority (data gaps), then loose clubs (known issues),
-  // then thin clubs (need more volume to trust), then a light maintenance pass on solid clubs.
-  const plan = [];
-  let remaining = totalBalls;
-
-  const allocate = (list, perClub, tier, reasonFn) => {
-    list.forEach(s => {
-      if (remaining <= 0) return;
-      const balls = Math.min(perClub, remaining);
-      if (balls < 4) return; // not worth a line item under 4 balls
-      plan.push({ club: s.club, balls, tier, reason: reasonFn(s) });
-      remaining -= balls;
-    });
-  };
-
-  allocate(unlogged, 9, 'Data gap — zero shots logged',
-    () => 'Never logged. In your bag, but the dashboard has no read on it yet.');
-  allocate(loose, 14, 'Known issue — wide dispersion',
-    s => s.spread + ' yd carry spread on ' + s.recentDate + ' (' + s.recentN + ' shots) — widest recent session.');
-  allocate(thin, 9, 'Thin sample — needs volume',
-    s => 'Only ' + s.n + ' shots logged. Too few to trust an average or spot a trend.');
-  allocate(solid, 5, 'Maintenance',
-    s => s.spread + ' yd spread on ' + s.recentDate + ' — already reliable, just confirm it holds.');
-
-  // If anything's left (all clubs covered under budget), top up maintenance on the tightest club
-  if (remaining > 4 && solid.length) {
-    const best = solid.sort((a,b) => a.spread - b.spread)[0];
-    const existing = plan.find(p => p.club === best.club);
-    if (existing) existing.balls += remaining;
-    else plan.push({ club: best.club, balls: remaining, tier: 'Maintenance', reason: 'Extra reps on your most consistent club.' });
-    remaining = 0;
-  }
-
-  document.getElementById('practice-plan').innerHTML = (() => {
-    let out = '<p style="font-size:11px;color:var(--muted);margin-bottom:12px">Based on a ' + totalBalls
-      + '-ball bucket (your average per session) and current gaps in your bag data.</p>';
-    let tier = null;
-    plan.forEach(p => {
-      if (p.tier !== tier) {
-        tier = p.tier;
-        out += '<p class="plan-tier-label">' + tier + '</p>';
-      }
-      out += '<div class="plan-row"><div class="plan-club"><span class="plan-club-name">'
-        + (CLUB_ABBR[p.club] || p.club) + '</span><span class="plan-reason">' + p.reason + '</span></div>'
-        + '<span class="plan-balls">' + p.balls + ' balls</span></div>';
-    });
-    const used = plan.reduce((s,p) => s + p.balls, 0);
-    out += '<div class="plan-total"><span>Total planned</span><span>' + used + ' / ' + totalBalls + ' balls</span></div>';
-    const covered = new Set(plan.map(p => p.club));
-    const skipped = FULL_BAG.filter(c => !covered.has(c));
-    if (skipped.length) {
-      out += '<p style="font-size:11px;color:var(--muted);margin-top:10px">Not in this bucket: '
-        + skipped.map(c => CLUB_ABBR[c] || c).join(', ') + '. Rotate these in next session.</p>';
-    }
-    return out;
-  })();
+  renderPractice();
 
   // ---------- On-course rounds ----------
   // Standard scorecard marks: circle = birdie, double circle = eagle+,
@@ -1693,8 +1800,10 @@ function switchTab(tab) {
 
 window.addEventListener('DOMContentLoaded', () => {
   loadFromSheet();
-  const savedTab = localStorage.getItem('golf_dashboard_tab');
-  if (savedTab) switchTab(savedTab);
+  let savedTab = null;
+  try { savedTab = localStorage.getItem('golf_dashboard_tab'); } catch (e) {}
+  if (!savedTab && window.matchMedia('(max-width: 600px)').matches) savedTab = 'practice';
+  if (savedTab && document.getElementById('tab-' + savedTab)) switchTab(savedTab);
 });
 </script>
 </body>
