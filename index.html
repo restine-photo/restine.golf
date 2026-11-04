@@ -296,14 +296,22 @@ function showCourse(id) {
   if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id);
 }
 
+const STATE_NAMES = { IL: 'Illinois', NV: 'Nevada' };
+
 function renderTabs() {
-  const now = Date.now();
-  const sorted = [...COURSE_GUIDES].sort((a, b) => new Date(a.date) - new Date(b.date));
-  document.getElementById('course-select').innerHTML = sorted.map(g => {
-    const d = new Date(g.date);
-    const played = d.getTime() + 6 * 3600e3 < now ? ' (played)' : '';
-    return `<option value="${g.id}">${g.short}${played}</option>`;
-  }).join('');
+  // Group by state, then course name, alphabetically
+  const groups = {};
+  COURSE_GUIDES.forEach(g => {
+    const code = g.location.split(',').pop().trim();
+    const state = STATE_NAMES[code] || code;
+    (groups[state] = groups[state] || []).push(g);
+  });
+  document.getElementById('course-select').innerHTML = Object.keys(groups).sort().map(state =>
+    `<optgroup label="${state}">` +
+    groups[state].sort((a, b) => a.course.localeCompare(b.course))
+      .map(g => `<option value="${g.id}">${g.course}</option>`).join('') +
+    `</optgroup>`
+  ).join('');
 }
 
 renderTabs();
