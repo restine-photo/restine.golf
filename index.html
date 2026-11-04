@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Golf Stats Dashboard</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<title>Course Guides</title>
 <style>
   :root {
     --bg: #ffffff;
     --surface: #f7f7f5;
     --surface2: #eef1ec;
     --border: rgba(0,0,0,0.10);
-    --text: #2d2a26;
+    --text: #1a1a1a;
     --muted: #6b6f68;
     --accent: #006747;
     --accent2: #1a6e42;
@@ -23,1787 +22,295 @@
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-sans);
-    font-size: 14px;
-    line-height: 1.6;
-    min-height: 100vh;
-  }
-
+  body { background: var(--bg); color: var(--text); font-family: var(--font-sans); font-size: 14px; line-height: 1.6; min-height: 100vh; }
   a { color: var(--accent2); text-decoration: none; }
 
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 1.5rem 2rem;
-    display: flex;
-    align-items: baseline;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
+  header { border-bottom: 1px solid var(--border); padding: 1.5rem 2rem; display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+  header h1 { font-family: var(--font-mono); font-size: 1rem; font-weight: 700; color: var(--accent); letter-spacing: 0.05em; }
+  header span { font-size: 12px; color: var(--muted); }
+  header .back { margin-left: auto; font-family: var(--font-mono); font-size: 12px; border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; padding: 4px 10px; color: var(--muted); }
+  header .back:hover { color: var(--text); }
 
-  header h1 {
-    font-family: var(--font-mono);
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: 0.05em;
-  }
+  main { padding: 2rem; max-width: 1100px; margin: 0 auto; }
 
-  header span {
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  #sheet-config {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  #sheet-config input {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 12px;
-    font-family: var(--font-mono);
-    width: 320px;
-    max-width: 100%;
-  }
-
-  #sheet-config input:focus {
-    outline: none;
-    border-color: var(--accent2);
-  }
-
-  #sheet-config button {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-size: 12px;
-    cursor: pointer;
-    font-family: var(--font-sans);
-    white-space: nowrap;
-  }
-
-  #sheet-config button:hover { opacity: 0.85; }
-
-  #status {
-    font-size: 11px;
-    color: var(--muted);
-    font-family: var(--font-mono);
-  }
-
-  main {
-    padding: 2rem;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-
-  #setup-banner {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    border-radius: 8px;
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 2rem;
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.8;
-  }
-
-  #setup-banner strong { color: var(--text); }
-  #setup-banner code {
-    background: var(--surface2);
-    color: var(--accent);
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-  }
-
-  .kpi-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-    margin-bottom: 2rem;
-  }
-
-  .kpi {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1rem 1.25rem;
-  }
-
-  .kpi-label {
-    font-size: 11px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 6px;
-    font-family: var(--font-mono);
-  }
-
-  .kpi-value {
-    font-size: 28px;
-    font-weight: 700;
-    font-family: var(--font-mono);
-    color: var(--accent);
-    line-height: 1;
-  }
-
-  .kpi-sub {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 4px;
-  }
-
-  .section-label {
-    font-size: 11px;
-    font-family: var(--font-mono);
-    color: var(--accent);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 1rem;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .grid-2 {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.25rem;
-    margin-bottom: 2rem;
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.25rem;
-  }
-
-  .card-title {
-    font-size: 12px;
-    font-family: var(--font-mono);
-    color: var(--accent);
-    font-weight: 700;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .chart-wrap {
-    position: relative;
-    width: 100%;
-  }
-
-  .club-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
-  .club-table th {
-    text-align: left;
-    font-size: 11px;
-    font-family: var(--font-mono);
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 6px 8px;
-    border-bottom: 1px solid var(--border);
-    font-weight: 400;
-    white-space: nowrap;
-  }
-
-  .club-table td {
-    padding: 10px 8px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 13px;
-  }
-
-  .club-table tr:last-child td { border-bottom: none; }
-
-  .club-table td:first-child { color: var(--accent2); font-weight: 600; }
-
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-family: var(--font-mono);
-  }
-
-  .badge-good { background: rgba(0,103,71,0.10); color: var(--accent); }
-  .badge-warn { background: rgba(184,134,11,0.10); color: var(--amber); }
-  .badge-bad  { background: rgba(192,57,43,0.10); color: var(--danger); }
-
-  .session-list { display: flex; flex-direction: column; gap: 6px; }
-
-  .session-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 10px;
-    background: var(--surface2);
-    border-radius: 6px;
-    font-size: 12px;
-    font-family: var(--font-mono);
-  }
-
-  .session-date { color: var(--muted); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+  .card-title { font-size: 12px; font-family: var(--font-mono); color: var(--accent); font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.06em; }
 
   .round-card { margin-bottom: 1.5rem; }
   .round-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
   .round-course { font-size: 15px; font-weight: 700; color: var(--accent); }
   .round-meta { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
-  .round-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0 16px; }
   .round-kpi { background: var(--surface2); border-radius: 8px; padding: 10px; text-align: center; }
   .round-kpi-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-family: var(--font-mono); }
   .round-kpi-value { font-size: 18px; font-weight: 700; font-family: var(--font-mono); }
-  .hole-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--font-mono); }
-  .hole-table th { text-align: center; color: var(--muted); font-weight: 400; padding: 4px 2px; border-bottom: 1px solid var(--border); font-size: 10px; }
-  .hole-table td { text-align: center; padding: 5px 2px; color: var(--text); border-bottom: 1px solid var(--border); }
-  .hole-table td:first-child, .hole-table th:first-child { text-align: left; color: var(--muted); padding-left: 4px; }
-  .hole-birdie { color: var(--accent); font-weight: 600; }
-  .hole-par { color: var(--text); }
-  .hole-bogey { color: var(--amber); }
-  .hole-double { color: var(--danger); }
 
-  .score-mark {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 20px; height: 20px; margin: 0 auto;
-  }
-  .score-birdie {
-    border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent);
-  }
-  .score-eagle {
-    border-radius: 50%; border: 1.5px solid var(--accent);
-    box-shadow: 0 0 0 2.5px var(--bg), 0 0 0 4px var(--accent);
-    color: var(--accent);
-  }
-  .score-bogey {
-    border-radius: 3px; border: 1.5px solid var(--amber); color: var(--amber);
-  }
-  .score-double {
-    border-radius: 3px; border: 1.5px solid var(--danger);
-    box-shadow: 0 0 0 2.5px var(--bg), 0 0 0 4px var(--danger);
-    color: var(--danger);
-  }
-  .score-par { color: var(--text); }
-  .hole-gir { color: var(--accent); }
-  .session-shots { color: var(--accent2); }
-
-  #loading {
-    text-align: center;
-    padding: 4rem;
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 13px;
+  /* Course guides tab */
+  .guide-meta-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0 16px; }
+  .guide-rules { list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+  .guide-rules li { padding: 8px 10px; background: var(--surface2); border-radius: 6px; }
+  .yardage-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 6px; }
+  .yardage-cell { background: var(--surface2); border-radius: 6px; padding: 6px 4px; text-align: center; font-family: var(--font-mono); }
+  .yardage-cell b { display: block; font-size: 11px; color: var(--accent2); }
+  .yardage-cell span { font-size: 13px; }
+  .guide-nine { margin-top: 1.5rem; }
+  .guide-hole { border-top: 1px solid var(--border); padding: 12px 0; }
+  .guide-hole:first-of-type { border-top: none; }
+  .guide-hole-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+  .guide-hole-num { font-family: var(--font-mono); font-weight: 700; font-size: 15px; color: var(--accent); min-width: 28px; }
+  .guide-hole-name { font-weight: 600; font-size: 13px; }
+  .guide-hole-stats { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .guide-clubs { font-family: var(--font-mono); font-size: 12px; color: var(--accent2); font-weight: 600; margin-left: auto; }
+  .guide-text { font-size: 13px; line-height: 1.55; padding-left: 38px; }
+  .guide-flag { display: inline-block; font-family: var(--font-mono); font-size: 10px; color: var(--amber); border: 1px solid var(--amber); border-radius: 4px; padding: 0 5px; margin-left: 6px; vertical-align: 1px; }
+  .guide-note { font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 1rem; }
+  @media (max-width: 600px) {
+    .guide-meta-row { grid-template-columns: repeat(2, 1fr); }
+    .guide-text { padding-left: 0; }
+    .guide-clubs { margin-left: 38px; width: 100%; }
   }
 
-  #error-msg {
-    display: none;
-    background: rgba(192,57,43,0.06);
-    border: 1px solid rgba(192,57,43,0.2);
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
-    color: var(--danger);
-    font-size: 13px;
-    margin-bottom: 1.5rem;
-  }
+  .guide-text { max-width: 72ch; }
 
-  #content { display: none; }
-
-  .tab-bar {
-    display: flex; gap: 4px; padding: 4px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; margin-bottom: 1.5rem; width: fit-content;
+  .course-picker { display: block; position: relative; width: fit-content; max-width: 100%; margin-bottom: 1.5rem; }
+  .course-picker select {
+    appearance: none; -webkit-appearance: none;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-family: var(--font-mono); font-size: 13px;
+    padding: 10px 40px 10px 14px; cursor: pointer; max-width: 100%;
   }
-  .tab-btn {
-    background: transparent; border: none; color: var(--muted);
-    font-family: var(--font-mono); font-size: 13px; padding: 8px 18px;
-    border-radius: 7px; cursor: pointer; transition: background 0.15s, color 0.15s;
-  }
-  .tab-btn:hover { color: var(--text); }
-  .tab-btn.active { background: var(--accent); color: #fff; }
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-
-  .window-bar {
-    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-    margin-bottom: 1.25rem;
-  }
-  .window-label {
-    font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-right: 2px;
-  }
-  .window-btn {
-    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
-    font-family: var(--font-mono); font-size: 12px; padding: 6px 12px;
-    border-radius: 7px; cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
-  }
-  .window-btn:hover { color: var(--text); }
-  .window-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .window-note { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-left: 4px; }
-
-  .insight-list { display: flex; flex-direction: column; gap: 8px; }
-
-  .plan-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 12px;
-    background: var(--surface2);
-    border-radius: 6px;
-    margin-bottom: 6px;
-    gap: 12px;
-  }
-  .plan-row { cursor: pointer; }
-  .plan-row.done { opacity: 0.5; }
-  .plan-row.done .plan-balls { text-decoration: line-through; }
-  .plan-row input[type=checkbox] { accent-color: var(--accent); width: 20px; height: 20px; flex-shrink: 0; cursor: pointer; }
-  .plan-total a { color: var(--accent2); }
-  .plan-club { display: flex; align-items: center; gap: 10px; min-width: 0; }
-  .plan-club-name { color: var(--accent2); font-family: var(--font-mono); font-weight: 700; font-size: 13px; flex-shrink: 0; }
-  .plan-reason { color: var(--muted); font-size: 12px; line-height: 1.4; }
-  .plan-balls { font-family: var(--font-mono); color: var(--text); font-size: 13px; white-space: nowrap; flex-shrink: 0; }
-  .plan-tier-label { font-size: 10px; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 12px 0 4px; }
-  .plan-tier-label:first-child { margin-top: 0; }
-  .plan-total { display: flex; justify-content: space-between; padding: 10px 12px; margin-top: 4px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
-
-  .insight {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    padding: 10px 12px;
-    background: var(--surface2);
-    border-radius: 6px;
-    font-size: 13px;
-    line-height: 1.5;
-  }
-
-  .insight-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    margin-top: 5px;
-    flex-shrink: 0;
+  .course-picker select:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .course-picker::after {
+    content: ''; position: absolute; right: 16px; top: 50%; pointer-events: none;
+    width: 7px; height: 7px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
+    transform: translateY(-70%) rotate(45deg);
   }
 
   @media (max-width: 600px) {
     header { padding: 1rem; }
     main { padding: 1rem; }
-    #sheet-config input { width: 100%; }
-    .kpi-value { font-size: 22px; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>⛳ golf.stats</h1>
-  <span id="last-updated"></span>
-  <div id="sheet-config">
-    <button onclick="loadFromSheet()" id="refresh-btn" style="background:transparent;border:1px solid rgba(0,0,0,0.15);color:var(--muted);">↻ Refresh</button>
-    <span id="status"></span>
-  </div>
+  <h1>⛳ golf.guide</h1>
+  <span id="header-sub"></span>
+  <a class="back" href="index.html">golf.stats</a>
 </header>
 
 <main>
-
-  <div id="error-msg"></div>
-  <div id="loading" style="display:none">Loading your data…</div>
-
-  <div id="content">
-    <div class="tab-bar">
-      <button class="tab-btn active" data-tab="range" onclick="switchTab('range')">Range</button>
-      <button class="tab-btn" data-tab="practice" onclick="switchTab('practice')">Practice</button>
-      <button class="tab-btn" data-tab="rounds" onclick="switchTab('rounds')">Rounds</button>
-    </div>
-
-    <div class="tab-panel active" id="tab-range">
-    <div class="window-bar" id="window-bar" style="display:none">
-      <span class="window-label">Show:</span>
-      <button class="window-btn" data-window="all" onclick="setSessionWindow('all')">All-time</button>
-      <button class="window-btn" data-window="5" onclick="setSessionWindow('5')">Last 5 sessions</button>
-      <button class="window-btn" data-window="3" onclick="setSessionWindow('3')">Last 3 sessions</button>
-      <span class="window-note" id="window-note"></span>
-    </div>
-    <div class="kpi-row" id="kpi-row"></div>
-
-    <div class="card" style="margin-bottom: 1.25rem;">
-      <p class="card-title">Key insights</p>
-      <div class="insight-list" id="insights"></div>
-    </div>
-
-    <p class="section-label">Club averages</p>
-    <div class="card" style="margin-bottom: 2rem; overflow-x: auto;">
-      <table class="club-table" id="club-table">
-        <thead>
-          <tr>
-            <th>Club</th>
-            <th>Loft</th>
-            <th>#</th>
-            <th>Carry</th>
-            <th>Total</th>
-            <th>Est. carry</th>
-            <th>Est. total</th>
-            <th>vs 12 hdcp</th>
-            <th>vs SCR</th>
-            <th>LPGA</th>
-            <th>Sprd</th>
-            <th>Smash</th>
-            <th>vs SCR</th>
-          </tr>
-        </thead>
-        <tbody id="club-table-body"></tbody>
-      </table>
-    </div>
-
-    <p style="font-size:11px;color:var(--muted);margin:-1.5rem 0 1.5rem;padding:0 0.25rem">Raw carry/dist = range ball data. Est. columns = +11% adjustment for premium ball (Kirkland, Pro V1, TP5, etc.) on course. Benchmark gaps use estimated carry.</p>
-
-    <p class="section-label">Consistency (carry spread per club)</p>
-    <div class="card" style="margin-bottom: 2rem;">
-      <div class="chart-wrap" style="height: 220px;">
-        <canvas id="spread-chart" role="img" aria-label="Carry distance spread (max minus min) per club — tighter is better"></canvas>
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <p class="card-title">Smash factor by club</p>
-        <div class="chart-wrap" style="height: 220px;">
-          <canvas id="smash-chart" role="img" aria-label="Average smash factor per club"></canvas>
-        </div>
-      </div>
-      <div class="card">
-        <p class="card-title">Club speed by club</p>
-        <div class="chart-wrap" style="height: 220px;">
-          <canvas id="speed-chart" role="img" aria-label="Average club speed per club"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <p class="section-label">Carry trend over sessions</p>
-    <div class="card" style="margin-bottom: 2rem;">
-      <div style="display:flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem;" id="trend-legend"></div>
-      <div class="chart-wrap" style="height: 240px;">
-        <canvas id="trend-chart" role="img" aria-label="Carry distance trend over time by club"></canvas>
-      </div>
-    </div>
-
-    <p class="section-label">Club speed trend over sessions</p>
-    <div class="card" style="margin-bottom: 2rem;">
-      <div style="display:flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem;" id="speed-trend-legend"></div>
-      <div class="chart-wrap" style="height: 240px;">
-        <canvas id="speed-trend-chart" role="img" aria-label="Club speed trend over time by club"></canvas>
-      </div>
-    </div>
-
-    <p class="section-label">Gap vs female scratch (0 hdcp) — carry distance</p>
-    <div class="card" style="margin-bottom: 0.5rem;">
-      <p style="font-size:11px;color:var(--muted);margin-bottom:1rem">Green = ahead of benchmark · Red = behind · Based on Shot Scope 2026 female scratch data</p>
-      <div class="chart-wrap" style="height: 240px;">
-        <canvas id="gap-chart" role="img" aria-label="Your carry distance gap versus female scratch golfer benchmarks per club"></canvas>
-      </div>
-    </div>
-    <p style="font-size:11px;color:var(--muted);margin-bottom:2rem;padding:0 0.25rem">LPGA Tour pro averages shown for reference only — scratch amateur is the actionable benchmark.</p>
-
-    <p class="section-label">Club speed vs benchmarks</p>
-    <div class="card" style="margin-bottom: 0.5rem; overflow-x: auto;">
-      <table class="club-table" id="speed-table">
-        <thead>
-          <tr>
-            <th>Club</th>
-            <th>Your speed</th>
-            <th>12 hdcp</th>
-            <th>vs 12 hdcp</th>
-            <th>Scratch</th>
-            <th>vs SCR</th>
-            <th>LPGA</th>
-            <th>vs LPGA</th>
-          </tr>
-        </thead>
-        <tbody id="speed-table-body"></tbody>
-      </table>
-    </div>
-    <p style="font-size:11px;color:var(--muted);margin-bottom:2rem;padding:0 0.25rem">Club speed needs no ball correction — it measures the club, not the ball. Note: radar units like the LM1 can read 3–7 mph high vs Trackman.</p>
-
-    <p class="section-label">Speed gap vs scratch</p>
-    <div class="card" style="margin-bottom: 2rem;">
-      <div class="chart-wrap" style="height: 240px;">
-        <canvas id="speed-gap-chart" role="img" aria-label="Your club speed gap versus female scratch benchmarks per club"></canvas>
-      </div>
-    </div>
-
-
-    <p class="section-label" style="margin-top:2rem">Sessions</p>
-    <div class="card" style="margin-bottom: 2rem;">
-      <div class="session-list" id="session-list"></div>
-    </div>
-    </div>
-
-    <div class="tab-panel" id="tab-practice">
-    <div class="card" style="margin-bottom: 1.25rem;">
-      <p class="card-title">Next practice session</p>
-      <div id="practice-plan"></div>
-    </div>
-    </div>
-
-    <div class="tab-panel" id="tab-rounds">
-    <div class="card" style="margin-bottom: 1.25rem;">
-      <p class="card-title">Key insights</p>
-      <div class="insight-list" id="round-insights"></div>
-    </div>
-    <p class="section-label">On-course rounds</p>
-    <div id="rounds-container"></div>
-    </div>
-  </div>
+  <label class="course-picker">
+    <select id="course-select" aria-label="Choose a course" onchange="showCourse(this.value)"></select>
+  </label>
+  <div id="guides-container"></div>
 </main>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTRuocabCItya4B1K6wramdLmviqHZ8Um6mw6wKM7kNvAA0wi97VNZlqPfBmxwBiorbHyd8HOAwQ9a-/pub?output=csv";
-const CLUB_ORDER = ['Dr','3w','5w','7w','4i','5i','6i','7i','8i','9i','Pw','Aw','Sw','Lw'];
-
-// Female scratch (0 handicap) carry benchmarks — Shot Scope 2026 / Trackman data
-// Source: Shot Scope 2026 women's data, MyGolfSpy, Golf Monthly
-const SCRATCH_F_BENCHMARKS = {
-  'Driver':          { carry: 210, speed: 88,  smash: 1.38 },
-  '3 Wood':          { carry: 175, speed: 80,  smash: 1.30 },
-  '5 Wood':          { carry: 162, speed: 78,  smash: 1.28 },
-  '7 Wood':          { carry: 148, speed: 75,  smash: 1.26 },
-  '4 Iron':          { carry: 145, speed: 76,  smash: 1.28 },
-  '5 Iron':          { carry: 138, speed: 75,  smash: 1.28 },
-  '6 Iron':          { carry: 130, speed: 74,  smash: 1.27 },
-  '7 Iron':          { carry: 148, speed: 73,  smash: 1.30 },
-  '8 Iron':          { carry: 135, speed: 71,  smash: 1.28 },
-  '9 Iron':          { carry: 122, speed: 69,  smash: 1.26 },
-  'Pitching Wedge':  { carry: 105, speed: 67,  smash: 1.22 },
-  'Approach Wedge':  { carry: 92,  speed: 64,  smash: 1.18 },
-  'Sand Wedge':      { carry: 80,  speed: 60,  smash: 1.15 },
-  'Lob Wedge':       { carry: 65,  speed: 55,  smash: 1.10 },
-};
-
-// Club speed benchmarks (mph) — derived from Golfing Focus female driver data
-// by handicap bracket, scaled per-club using TrackMan loft/length ratios.
-// NOTE: driver figures are directly sourced; per-club figures are derived estimates.
-const SPEED_BENCHMARKS = {
-  'Driver':          { hcp12: 79, scratch: 89, lpga: 96 },
-  '3 Wood':          { hcp12: 74, scratch: 83, lpga: 90 },
-  '5 Wood':          { hcp12: 72, scratch: 80, lpga: 87 },
-  '7 Wood':          { hcp12: 70, scratch: 78, lpga: 85 },
-  '4 Iron':          { hcp12: 69, scratch: 77, lpga: 84 },
-  '5 Iron':          { hcp12: 68, scratch: 76, lpga: 83 },
-  '6 Iron':          { hcp12: 66, scratch: 74, lpga: 81 },
-  '7 Iron':          { hcp12: 65, scratch: 73, lpga: 79 },
-  '8 Iron':          { hcp12: 63, scratch: 71, lpga: 77 },
-  '9 Iron':          { hcp12: 61, scratch: 69, lpga: 75 },
-  'Pitching Wedge':  { hcp12: 59, scratch: 67, lpga: 73 },
-  'Approach Wedge':  { hcp12: 56, scratch: 64, lpga: 70 },
-  'Sand Wedge':      { hcp12: 53, scratch: 60, lpga: 66 },
-  'Lob Wedge':       { hcp12: 49, scratch: 55, lpga: 61 },
-};
-
-// Female 12 handicap carry benchmarks — Shot Scope 2026 data
-const HCP12_F_BENCHMARKS = {
-  'Driver':          { carry: 170 },
-  '3 Wood':          { carry: 148 },
-  '5 Wood':          { carry: 138 },
-  '7 Wood':          { carry: 128 },
-  '4 Iron':          { carry: 122 },
-  '5 Iron':          { carry: 116 },
-  '6 Iron':          { carry: 110 },
-  '7 Iron':          { carry: 119 },
-  '8 Iron':          { carry: 108 },
-  '9 Iron':          { carry: 97  },
-  'Pitching Wedge':  { carry: 84  },
-  'Approach Wedge':  { carry: 74  },
-  'Sand Wedge':      { carry: 64  },
-  'Lob Wedge':       { carry: 52  },
-};
-
-// LPGA Tour pro carry benchmarks for reference (Trackman 2024)
-// carry: Trackman LPGA Tour averages. smash: derived from Trackman's published
-// LPGA club/ball speed pairs — driver (1.48) is well established, the rest are
-// ratio-derived and should be treated as approximate.
-const LPGA_BENCHMARKS = {
-  'Driver':          { carry: 223, smash: 1.48 },
-  '3 Wood':          { carry: 200, smash: 1.47 },
-  '5 Wood':          { carry: 189, smash: 1.47 },
-  '7 Wood':          { carry: 178, smash: 1.45 },
-  '4 Iron':          { carry: 169, smash: 1.43 },
-  '5 Iron':          { carry: 161, smash: 1.41 },
-  '6 Iron':          { carry: 152, smash: 1.40 },
-  '7 Iron':          { carry: 143, smash: 1.39 },
-  '8 Iron':          { carry: 133, smash: 1.35 },
-  '9 Iron':          { carry: 123, smash: 1.31 },
-  'Pitching Wedge':  { carry: 110, smash: 1.28 },
-  'Approach Wedge':  { carry: 98,  smash: 1.25 },
-  'Sand Wedge':      { carry: 85,  smash: 1.21 },
-  'Lob Wedge':       { carry: 70,  smash: 1.16 },
-};
-const COLORS = ['#006747','#1a6e42','#b8860b','#c0392b','#7d5ba6','#2980b9','#c0392b','#27ae60','#d4a017','#2471a3'];
-
-let charts = {};
-let allData = [];
-
-const ROUNDS = [
-  {
-    date: '2026-09-04',
-    course: 'Half Moon Bay Ocean Course', location: 'Half Moon Bay, CA',
-    tees: 'White (Women\'s)',
-    courseRating: 74.8, slope: 133, yardage: 6081,
-    holes: [
-      { hole: 1,  par: 4, strokes: 5, putts: 2 },
-      { hole: 2,  par: 4, strokes: 4, putts: 2 }, // GHIN posts hole 2 at par 4 (men's row); corrected from initial par-3 misread
-      { hole: 3,  par: 3, strokes: 3, putts: 2 },
-      { hole: 4,  par: 5, strokes: 6, putts: 2 },
-      { hole: 5,  par: 4, strokes: 5, putts: 1 },
-      { hole: 6,  par: 4, strokes: 6, putts: 2 },
-      { hole: 7,  par: 3, strokes: 4, putts: 2 },
-      { hole: 8,  par: 5, strokes: 6, putts: 3 },
-      { hole: 9,  par: 3, strokes: 3, putts: 1 },
-      { hole: 10, par: 5, strokes: 5, putts: 2 },
-      { hole: 11, par: 4, strokes: 5, putts: 2 },
-      { hole: 12, par: 3, strokes: 4, putts: 2 },
-      { hole: 13, par: 4, strokes: 5, putts: 2 },
-      { hole: 14, par: 5, strokes: 7, putts: 3 },
-      { hole: 15, par: 4, strokes: 5, putts: 2 },
-      { hole: 16, par: 4, strokes: 5, putts: 2 },
-      { hole: 17, par: 3, strokes: 3, putts: 2 },
-      { hole: 18, par: 5, strokes: 6, putts: 2 },
-    ]
-  },
-  {
-    date: '2026-09-10',
-    course: 'The Club at Ruby Hill', location: 'Pleasanton, CA',
-    tees: 'Red (Women\'s)',
-    courseRating: 70.5, slope: 124, yardage: 5279,
-    holes: [
-      { hole: 1,  par: 4, strokes: 4, putts: 2 },
-      { hole: 2,  par: 4, strokes: 6, putts: 3 },
-      { hole: 3,  par: 3, strokes: 3, putts: 2 },
-      { hole: 4,  par: 5, strokes: 4, putts: 1 },
-      { hole: 5,  par: 4, strokes: 4, putts: 2 },
-      { hole: 6,  par: 3, strokes: 3, putts: 1 },
-      { hole: 7,  par: 4, strokes: 6, putts: 3 },
-      { hole: 8,  par: 5, strokes: 6, putts: 3 },
-      { hole: 9,  par: 4, strokes: 5, putts: 1 },
-      { hole: 10, par: 4, strokes: 5, putts: 3 },
-      { hole: 11, par: 4, strokes: 5, putts: 2 },
-      { hole: 12, par: 4, strokes: 5, putts: 3 },
-      { hole: 13, par: 5, strokes: 8, putts: 3 },
-      { hole: 14, par: 3, strokes: 3, putts: 2 },
-      { hole: 15, par: 4, strokes: 6, putts: 2 },
-      { hole: 16, par: 4, strokes: 4, putts: 2 },
-      { hole: 17, par: 3, strokes: 3, putts: 2 },
-      { hole: 18, par: 5, strokes: 6, putts: 1 },
-    ]
-  },
-  {
-    date: '2026-09-11',
-    course: 'Sharp Park Golf Course', location: 'Pacifica, CA',
-    tees: 'White',
-    courseRating: 75.9, slope: 130, yardage: 6133,
-    holes: [
-      { hole: 1,  par: 4, strokes: 6, putts: 2 },
-      { hole: 2,  par: 4, strokes: 5, putts: 2 },
-      { hole: 3,  par: 4, strokes: 5, putts: 2 },
-      { hole: 4,  par: 5, strokes: 7, putts: 3 },
-      { hole: 5,  par: 3, strokes: 5, putts: 3 },
-      { hole: 6,  par: 4, strokes: 6, putts: 1 },
-      { hole: 7,  par: 4, strokes: 5, putts: 1 },
-      { hole: 8,  par: 3, strokes: 5, putts: 2 },
-      { hole: 9,  par: 5, strokes: 7, putts: 2 },
-      { hole: 10, par: 4, strokes: 6, putts: 2 },
-      { hole: 11, par: 4, strokes: 6, putts: 2 },
-      { hole: 12, par: 3, strokes: 4, putts: 2 },
-      { hole: 13, par: 5, strokes: 5, putts: 1 },
-      { hole: 14, par: 4, strokes: 8, putts: 2 },
-      { hole: 15, par: 3, strokes: 4, putts: 2 },
-      { hole: 16, par: 4, strokes: 6, putts: 3 },
-      { hole: 17, par: 4, strokes: 5, putts: 2 },
-      { hole: 18, par: 5, strokes: 7, putts: 3 },
-    ]
-  },
-  {
-    date: '2026-09-13',
-    course: 'Golf Club at Moffett Field', location: 'Mountain View, CA',
-    tees: 'White (Women\'s)',
-    courseRating: 76.3, slope: 130, yardage: 6338,
-    holes: [
-      { hole: 1,  par: 4, strokes: 4, putts: 1 },
-      { hole: 2,  par: 5, strokes: 6, putts: 2 },
-      { hole: 3,  par: 5, strokes: 6, putts: 2 },
-      { hole: 4,  par: 4, strokes: 5, putts: 2 },
-      { hole: 5,  par: 3, strokes: 4, putts: 2 },
-      { hole: 6,  par: 4, strokes: 6, putts: 2 },
-      { hole: 7,  par: 3, strokes: 4, putts: 2 },
-      { hole: 8,  par: 4, strokes: 4, putts: 2 },
-      { hole: 9,  par: 5, strokes: 5, putts: 2 },
-      { hole: 10, par: 4, strokes: 5, putts: 2 },
-      { hole: 11, par: 5, strokes: 7, putts: 3 },
-      { hole: 12, par: 4, strokes: 7, putts: 3 }, // corrected from 6 to match 18Birdies live scoring
-      { hole: 13, par: 3, strokes: 4, putts: 2 },
-      { hole: 14, par: 4, strokes: 5, putts: 3 },
-      { hole: 15, par: 3, strokes: 4, putts: 2 },
-      { hole: 16, par: 4, strokes: 5, putts: 2 },
-      { hole: 17, par: 5, strokes: 5, putts: 2 },
-      { hole: 18, par: 4, strokes: 5, putts: 2 },
-    ]
-  },
-  {
-    date: '2026-09-14',
-    course: 'Blackhawk Country Club — Falls Course', location: 'Danville, CA',
-    tees: 'White (Women\'s)',
-    courseRating: 72.6, slope: 136, yardage: 5779,
-    holes: [
-      { hole: 1,  par: 4, strokes: 5, putts: 2 },
-      { hole: 2,  par: 4, strokes: 6, putts: 2 },
-      { hole: 3,  par: 5, strokes: 6, putts: 2 },
-      { hole: 4,  par: 3, strokes: 4, putts: 2 },
-      { hole: 5,  par: 4, strokes: 7, putts: 4 },
-      { hole: 6,  par: 5, strokes: 6, putts: 3 },
-      { hole: 7,  par: 4, strokes: 6, putts: 2 },
-      { hole: 8,  par: 4, strokes: 5, putts: 2 },
-      { hole: 9,  par: 3, strokes: 4, putts: 3 },
-      { hole: 10, par: 5, strokes: 5, putts: 1 },
-      { hole: 11, par: 3, strokes: 5, putts: 2 },
-      { hole: 12, par: 5, strokes: 7, putts: 3 },
-      { hole: 13, par: 3, strokes: 5, putts: 2 },
-      { hole: 14, par: 4, strokes: 7, putts: 3 },
-      { hole: 15, par: 4, strokes: 7, putts: 2 },
-      { hole: 16, par: 5, strokes: 6, putts: 2 },
-      { hole: 17, par: 3, strokes: 5, putts: 3 },
-      { hole: 18, par: 4, strokes: 5, putts: 2 },
-    ]
-  },
-  {
-    date: '2026-10-11',
-    course: 'Boulder Creek Golf Club — Desert Hawk/Coyote Run', location: 'Boulder City, NV',
-    tees: 'White',
-    courseRating: 74.2, slope: 137, yardage: 6080,
-    holes: [
-      { hole: 1,  par: 4, strokes: 5, putts: 2 },
-      { hole: 2,  par: 5, strokes: 5, putts: 2 },
-      { hole: 3,  par: 4, strokes: 6, putts: 3 },
-      { hole: 4,  par: 3, strokes: 4, putts: 3 },
-      { hole: 5,  par: 5, strokes: 5, putts: 2 },
-      { hole: 6,  par: 4, strokes: 7, putts: 3 },
-      { hole: 7,  par: 4, strokes: 3, putts: 1 },
-      { hole: 8,  par: 3, strokes: 3, putts: 1 },
-      { hole: 9,  par: 4, strokes: 6, putts: 2 },
-      { hole: 10, par: 4, strokes: 5, putts: 2 },
-      { hole: 11, par: 4, strokes: 5, putts: 2 },
-      { hole: 12, par: 3, strokes: 3, putts: 1 },
-      { hole: 13, par: 5, strokes: 6, putts: 2 },
-      { hole: 14, par: 4, strokes: 5, putts: 2 },
-      { hole: 15, par: 4, strokes: 5, putts: 3 },
-      { hole: 16, par: 5, strokes: 6, putts: 2 },
-      { hole: 17, par: 3, strokes: 3, putts: 2 },
-      { hole: 18, par: 4, strokes: 4, putts: 2 },
-    ]
-  },
-  {
-    date: '2026-10-16',
-    course: 'TPC Las Vegas', location: 'Las Vegas, NV',
-    tees: 'White',
-    courseRating: 73.7, slope: 142.0, yardage: 6047,
-    holes: [
-      { hole: 1,  par: 4, strokes: 6, putts: 2 },
-      { hole: 2,  par: 3, strokes: 5, putts: 2 },
-      { hole: 3,  par: 4, strokes: 5, putts: 3 },
-      { hole: 4,  par: 5, strokes: 4, putts: 1 },
-      { hole: 5,  par: 4, strokes: 5, putts: 2 },
-      { hole: 6,  par: 5, strokes: 7, putts: 2 },
-      { hole: 7,  par: 3, strokes: 2, putts: 1 },
-      { hole: 8,  par: 4, strokes: 6, putts: 2 },
-      { hole: 9,  par: 4, strokes: 5, putts: 2 },
-      { hole: 10, par: 4, strokes: 4, putts: 2 },
-      { hole: 11, par: 4, strokes: 5, putts: 2 },
-      { hole: 12, par: 3, strokes: 4, putts: 2 },
-      { hole: 13, par: 4, strokes: 5, putts: 2 },
-      { hole: 14, par: 4, strokes: 6, putts: 3 },
-      { hole: 15, par: 5, strokes: 7, putts: 2 },
-      { hole: 16, par: 3, strokes: 3, putts: 2 },
-      { hole: 17, par: 4, strokes: 6, putts: 3 },
-      { hole: 18, par: 4, strokes: 5, putts: 2 },
-    ]
-  }
-];
-
-const CLUB_ABBR = {
-  'Driver': 'DR',
-  'Mini Driver': 'MDR',
-  '3 Wood': '3W',
-  '5 Wood': '5W',
-  '7 Wood': '7W',
-  '4 Iron': '4i',
-  '5 Iron': '5i',
-  '6 Iron': '6i',
-  '7 Iron': '7i',
-  '8 Iron': '8i',
-  '9 Iron': '9i',
-  'Pitching Wedge': 'PW',
-  'Approach Wedge': 'AW',
-  'Sand Wedge': 'SW',
-  'Lob Wedge': 'LW',
-};
-
-// Loft (degrees) per club — from current bag spec
-const CLUB_LOFT = {
-  'Driver': 9,
-  'Mini Driver': 11.5,
-  '3 Wood': 15,
-  '5 Wood': 18,
-  '7 Wood': 21,
-  '4 Iron': 20,
-  '5 Iron': 23,
-  '6 Iron': 26.5,
-  '7 Iron': 30,
-  '8 Iron': 34,
-  '9 Iron': 39,
-  'Pitching Wedge': 44,
-  'Approach Wedge': 49,
-  'Sand Wedge': 54,
-  'Lob Wedge': 58,
-};
-
-function smashBadge(v) {
-  if (v >= 1.30) return `<span class="badge badge-good">${v.toFixed(2)}</span>`;
-  if (v >= 1.20) return `<span class="badge badge-warn">${v.toFixed(2)}</span>`;
-  return `<span class="badge badge-bad">${v.toFixed(2)}</span>`;
-}
-
-function spreadBadge(v) {
-  if (v <= 15) return `<span class="badge badge-good">${v} yds</span>`;
-  if (v <= 25) return `<span class="badge badge-warn">${v} yds</span>`;
-  return `<span class="badge badge-bad">${v} yds</span>`;
-}
-
-function destroyChart(id) {
-  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
-}
-
-function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
-  return lines.slice(1).filter(l => l.trim()).map(line => {
-    const vals = line.match(/(".*?"|[^,]+|(?<=,)(?=,)|^(?=,)|(?<=,)$)/g) || line.split(',');
-    const obj = {};
-    headers.forEach((h, i) => {
-      obj[h] = (vals[i] || '').replace(/^"|"$/g,'').trim();
-    });
-    return obj;
-  });
-}
-
-function groupByClub(data) {
-  const groups = {};
-  data.forEach(row => {
-    const club = row.club_full || row.club;
-    if (!club) return;
-    if (!groups[club]) groups[club] = [];
-    groups[club].push(row);
-  });
-  return groups;
-}
-
-function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
-
-function clubKey(club) {
-  const map = {'Driver':'Dr','3 Wood':'3w','5 Wood':'5w','7 Wood':'7w','4 Iron':'4i','5 Iron':'5i','6 Iron':'6i','7 Iron':'7i','8 Iron':'8i','9 Iron':'9i','Pitching Wedge':'Pw','Approach Wedge':'Aw','Sand Wedge':'Sw','Lob Wedge':'Lw'};
-  return map[club] || club;
-}
-
-let fullData = [];
-let sessionWindow = 'all'; // 'all' | '5' | '3' — number of most-recent sessions to include
-
-function setSessionWindow(w) {
-  sessionWindow = w;
-  document.querySelectorAll('.window-btn').forEach(b => b.classList.toggle('active', b.dataset.window === w));
-  localStorage.setItem('golf_session_window', w);
-  render(fullData);
-}
-
-// ---------- Practice tab ----------
-// Plan is independent of the Range session-window toggle: ball budget comes from the
-// last 3 sessions, club status (unlogged / thin / loose) comes from full history because
-// "thin sample" is a lifetime question, and spread uses each club's most recent 5+ shot session.
-const PACE_BALLS_PER_MIN = 1.5; // rough range pace including routine and rest between shots
-const PUTTING_MINUTES = { '30': 8, '60': 15, 'full': 20 };
-let practiceMode = 'full';
-try { practiceMode = localStorage.getItem('golf_practice_mode') || 'full'; } catch (e) {}
-if (!['30', '60', 'full'].includes(practiceMode)) practiceMode = 'full';
-const practiceMem = {}; // in-memory copy so checkboxes still work if storage is blocked
-
-function getPracticeDone(sig) {
-  if (practiceMem[sig] === undefined) {
-    let saved = [];
-    try { saved = JSON.parse(localStorage.getItem('golf_practice_done:' + sig) || '[]'); } catch (e) {}
-    practiceMem[sig] = Array.isArray(saved) ? saved : [];
-  }
-  return practiceMem[sig];
-}
-function savePracticeDone(sig) {
-  try { localStorage.setItem('golf_practice_done:' + sig, JSON.stringify(practiceMem[sig] || [])); } catch (e) {}
-}
-function togglePracticeItem(sig, id) {
-  const done = getPracticeDone(sig);
-  const i = done.indexOf(id);
-  if (i === -1) done.push(id); else done.splice(i, 1);
-  savePracticeDone(sig);
-  renderPractice();
-}
-function resetPractice(sig) {
-  practiceMem[sig] = [];
-  savePracticeDone(sig);
-  renderPractice();
-}
-function setPracticeMode(m) {
-  practiceMode = m;
-  try { localStorage.setItem('golf_practice_mode', m); } catch (e) {}
-  renderPractice();
-}
-
-function renderPractice() {
-  const el = document.getElementById('practice-plan');
-  if (!el || !fullData.length) return;
-  const all = fullData;
-  const allSessions = [...new Set(all.map(r => r.session_date))].sort();
-  const recent = allSessions.slice(-3);
-  const avgBucket = Math.round(all.filter(r => recent.includes(r.session_date)).length / recent.length);
-  const latestDate = allSessions[allSessions.length - 1];
-
-  // Time box -> ball budget. Putting time comes off the clock first.
-  const hasRounds = ROUNDS.length > 0;
-  const puttMin = hasRounds ? PUTTING_MINUTES[practiceMode] : 0;
-  const budget = practiceMode === 'full'
-    ? avgBucket
-    : Math.max(0, Math.min(avgBucket, Math.round((parseInt(practiceMode, 10) - puttMin) * PACE_BALLS_PER_MIN)));
-
-  const FULL_BAG = ['Driver','3 Wood','5 Wood','7 Wood','5 Iron','6 Iron','7 Iron','8 Iron','9 Iron',
-                    'Pitching Wedge','Approach Wedge','Sand Wedge','Lob Wedge'];
-  const MIN_TRUST = 15; // shots needed before a club's numbers are trustworthy
-
-  const bagStats = FULL_BAG.map(club => {
-    const rows = all.filter(r => (r.club_full || r.club) === club);
-    if (!rows.length) return { club, n: 0, status: 'unlogged' };
-    const carries = rows.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean);
-    const lifetimeSpread = carries.length ? Math.round(Math.max(...carries) - Math.min(...carries)) : null;
-    let recentSpread = lifetimeSpread, recentN = rows.length, recentDate = null;
-    for (let i = allSessions.length - 1; i >= 0; i--) {
-      const sRows = rows.filter(r => r.session_date === allSessions[i]);
-      if (sRows.length >= 5) {
-        const sCarries = sRows.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean);
-        recentSpread = Math.round(Math.max(...sCarries) - Math.min(...sCarries));
-        recentN = sRows.length;
-        recentDate = allSessions[i];
-        break;
-      }
-    }
-    return { club, n: rows.length, spread: recentSpread, recentN, recentDate, lifetimeSpread,
-      status: rows.length < MIN_TRUST ? 'thin' : 'established' };
-  });
-
-  const unlogged = bagStats.filter(s => s.status === 'unlogged');
-  const thin = bagStats.filter(s => s.status === 'thin');
-  const established = bagStats.filter(s => s.status === 'established');
-  const loose = established.filter(s => s.spread !== null && s.spread > 30).sort((a,b) => b.spread - a.spread);
-  const solid = established.filter(s => s.spread !== null && s.spread <= 30);
-
-  // Priority: data gaps, then known dispersion issues, then thin samples, then maintenance.
-  const plan = [];
-  let remaining = budget;
-  const allocate = (list, perClub, tier, reasonFn) => {
-    list.forEach(s => {
-      if (remaining <= 0) return;
-      const balls = Math.min(perClub, remaining);
-      if (balls < 4) return; // not worth a line item under 4 balls
-      plan.push({ club: s.club, balls, tier, reason: reasonFn(s) });
-      remaining -= balls;
-    });
-  };
-  allocate(unlogged, 9, 'Data gap — zero shots logged',
-    () => 'Never logged. In your bag, but the dashboard has no read on it yet.');
-  allocate(loose, 14, 'Known issue — wide dispersion',
-    s => s.spread + ' yd carry spread on ' + s.recentDate + ' (' + s.recentN + ' shots) — widest recent session.');
-  allocate(thin, 9, 'Thin sample — needs volume',
-    s => 'Only ' + s.n + ' shots logged. Too few to trust an average or spot a trend.');
-  allocate(solid, 5, 'Maintenance',
-    s => s.spread + ' yd spread on ' + s.recentDate + ' — already reliable, just confirm it holds.');
-  if (remaining > 4 && solid.length) {
-    const best = [...solid].sort((a,b) => a.spread - b.spread)[0];
-    const existing = plan.find(p => p.club === best.club);
-    if (existing) existing.balls += remaining;
-    else plan.push({ club: best.club, balls: remaining, tier: 'Maintenance', reason: 'Extra reps on your most consistent club.' });
-    remaining = 0;
-  }
-
-  // Putting / tee-to-green split from the last 3 rounds.
-  let green = null;
-  if (hasRounds) {
-    const last = [...ROUNDS].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
-    const per = last.map(r => {
-      const par = r.holes.reduce((s,h) => s + h.par, 0);
-      const strokes = r.holes.reduce((s,h) => s + h.strokes, 0);
-      const putts = r.holes.reduce((s,h) => s + h.putts, 0);
-      const lost = r.holes.reduce((s,h) => s + Math.max(0, h.putts - 2), 0);
-      return { putts, lost, ttg: (strokes - par) - lost, three: r.holes.filter(h => h.putts >= 3).length };
-    });
-    green = {
-      n: per.length,
-      putts: Math.round(avg(per.map(p => p.putts))),
-      lost: Math.round(avg(per.map(p => p.lost))),
-      ttg: Math.round(avg(per.map(p => p.ttg))),
-      three: per.reduce((s,p) => s + p.three, 0)
+// ── Course guides (static) ─────────────────────────────────────────────
+// Carries: LM1 range averages + 11% premium-ball correction + ~3% Las Vegas altitude.
+// Layout notes sourced from GolfPass and GolfCourseGurus; holes marked verified:false
+// had no published description — confirm shape on the tee sign / GPS.
+const COURSE_GUIDES = [{
+  id: 'bali-hai',
+  short: 'Bali Hai',
+  date: '2026-10-11T09:00',
+  course: 'Bali Hai Golf Club',
+  location: 'Las Vegas, NV',
+  when: 'Sun Oct 11, 2026 · 9:00 AM',
+  tee: 'Silver (Sand)',
+  yards: 6156, par: 71, rating: 74.8, slope: 137,
+  rules: [
+    'Miss is right: aim at the left edge of every landing area and let the fade come back.',
+    'Lay up to full-wedge numbers instead of half shots.',
+    'Water on 3, 4, 5, 9, 11, 16, 18. Center of the green over every pin near water.',
+    'October overseed: expect less roll than the totals below.',
+    'Bogey is a good score on 8, 15 and 18.'
+  ],
+  yardages: [['Dr','235'],['5W','190'],['7W','175'],['5i','165'],['6i','155'],['7i','147'],['8i','135'],['9i','124'],['PW','103'],['AW','90'],['54°','75']],
+  holes: [
+    {n:1, par:4, yds:290, clubs:'5W → PW', verified:true, text:'Generous fairway, one greenside bunker on the left. Right pins are wide open; left pins bring the bunker in. Lay up to a full PW and aim right half of the green. Tame green, so be aggressive with the putt.'},
+    {n:2, par:5, yds:494, clubs:'Dr → 5W → 54°', verified:false, text:'Women’s #3 handicap. Driver, 5W, then about 70 yds with the 54°. Par is a good score.'},
+    {n:3, par:4, yds:415, name:'Shipwreck', clubs:'Dr → 7W / lay up', verified:true, text:'Doglegs right. Creek runs the entire right side and the fairway slopes toward it. Green breaks left to right off the left hillside. Tee up on the right side of the box, aim down the left edge. Miss approaches left and let the slope feed it. If the drive drifts right, lay up and take bogey.'},
+    {n:4, par:4, yds:280, clubs:'7W → PW', verified:true, text:'Pond in play on a potentially drivable hole. Don’t take the bait: check the GPS carry to the pond, stay short of it with 7W or less, full PW in.'},
+    {n:5, par:4, yds:341, clubs:'Dr → PW', verified:true, text:'Approach is a short iron over water to an island/peninsula green. Driver gets you down to PW. Middle of the green, enough club to carry the front.'},
+    {n:6, par:3, yds:121, clubs:'9i', verified:false, text:'Center of the green.'},
+    {n:7, par:5, yds:517, name:'Bali Beach', clubs:'Dr → 5i/6i → 9i', verified:true, text:'Double dogleg. Large waste bunker up the right merges into a big bunker about 100 yds short of the green. Approach from the left opens the green and takes the front-right greenside bunker out of play. Stay left all three shots; lay up short of the big bunker for a full 9i.'},
+    {n:8, par:4, yds:450, clubs:'Dr → 8i → AW', verified:false, text:'Not reachable in two. Play it as a three-shot hole; bogey is fine.'},
+    {n:9, par:3, yds:140, clubs:'8i', verified:true, text:'Ponds guard the green. Back-left pin is a sucker pin that brings the water in. Aim center no matter where the flag is. Pro shop sometimes runs a hit-the-green wager here.'},
+    {n:10, par:5, yds:472, clubs:'Dr → 6i → AW', verified:false, text:'Women’s #4 handicap. Don’t chase it in two; lay up to a full AW.'},
+    {n:11, par:3, yds:138, clubs:'8i', verified:true, text:'White sand left flows into water. Ideal shot starts right and draws in; your fade won’t, so aim at the right edge and accept right of the hole. Ridge splits the green into two sections; note which side the pin is on.'},
+    {n:12, par:4, yds:407, clubs:'Dr → 7W', verified:false, text:'Driver, then 7W to the green.'},
+    {n:13, par:4, yds:426, clubs:'Dr → 5W / lay up', verified:false, text:'5W in only from a clean lie; otherwise lay up to a full wedge.'},
+    {n:14, par:3, yds:202, clubs:'5W', verified:false, text:'Longest par 3. Aim left-center; short is fine.'},
+    {n:15, par:5, yds:498, clubs:'Dr → 6i → PW', verified:false, text:'Women’s #2 handicap. Driver, 6i layup, full PW.'},
+    {n:16, par:3, yds:98, name:'Island green', clubs:'PW', verified:true, text:'Island green with two white bunkers and a prominent ridge across the green. Play to the pin’s tier but toward the middle. Audience on the Cili patio; ignore it.'},
+    {n:17, par:4, yds:419, clubs:'Dr → 5W/7W', verified:true, text:'Dogleg (direction unconfirmed; check the tee sign). Lay up if the approach looks tight.'},
+    {n:18, par:4, yds:448, clubs:'Dr → 9i → AW', verified:true, text:'Dogleg left. Left fairway bunker carries with a modest drive; use it as the tee target. Water front-right and sand around the green. Safety is left, where the fairway runs into the green; right is wet. Wide but shallow green. Lay up left to a full AW.'}
+  ]
+}, {
+  id: 'tpc-las-vegas',
+  short: 'TPC Las Vegas',
+  date: '2026-10-16T08:45',
+  course: 'TPC Las Vegas',
+  location: 'Las Vegas, NV',
+  when: 'Fri Oct 16, 2026 · 8:45 AM',
+  tee: 'White',
+  yards: 6047, par: 71, rating: 73.7, slope: 142,
+  rules: [
+    'Desert target golf: forced carries on almost every hole. Know your carry number, not your total.',
+    'Miss is right: the arroyos on 13 and 15 run the whole right side. Aim left on both.',
+    'Desert is a penalty area. Know your drop options before you re-tee.',
+    'Greens are quick and putts break toward the Strip.',
+    'Back nine plays harder than the front. Bank shots on 4 and 17.',
+    'Bogey is a good score on 3, 6, 13 and 15.'
+  ],
+  yardages: [['Dr','235'],['5W','190'],['7W','175'],['5i','165'],['6i','155'],['7i','147'],['8i','135'],['9i','124'],['PW','103'],['AW','90'],['54°','75']],
+  holes: [
+    {n:1, par:4, yds:315, clubs:'5W → PW', verified:false, text:'Opener. Lay up to a full PW rather than a half wedge.'},
+    {n:2, par:3, yds:151, name:'Canyon', clubs:'7i', verified:true, text:'Downhill from an elevated tee to an island-style green surrounded by barranca and desert. Plays shorter than the number. One bunker on the right; the slope right of the green kicks balls back toward the hole, but anything left is lost in the desert. Aim right-center. If you miss, know your drop options before you play again.'},
+    {n:3, par:4, yds:364, clubs:'Dr → 7i', verified:true, text:'Forced carry off the tee, then an uphill approach. Fairway bunkers run the left side; keep the drive on the right half of the fairway. The fairway slope pulls approaches left toward the greenside bunkers, so stay right. Club up one for the uphill approach.'},
+    {n:4, par:5, yds:471, clubs:'Dr → 6i → AW', verified:true, text:'Plays through a canyon the full length. Your birdie chance on the front. Keep every shot in the middle and lay up to a full AW.'},
+    {n:5, par:4, yds:353, clubs:'Dr → 9i', verified:false, text:'Driver leaves about 120 in.'},
+    {n:6, par:5, yds:551, clubs:'Dr → 5W → 8i/9i', verified:false, text:'Women’s #1 handicap and the longest hole. Three full shots; par is a great score, bogey is fine.'},
+    {n:7, par:3, yds:169, clubs:'5i', verified:false, text:'Center of the green.'},
+    {n:8, par:4, yds:376, clubs:'Dr → 7i/8i', verified:false, text:'Women’s #3 handicap. Fairway first.'},
+    {n:9, par:4, yds:308, clubs:'5W → 9i', verified:false, text:'Short par 4. Lay up to a full 9i.'},
+    {n:10, par:4, yds:367, clubs:'Dr → 8i', verified:false, text:'Driver leaves about 130 in.'},
+    {n:11, par:4, yds:362, clubs:'Dr → 8i', verified:false, text:'Women’s #6 handicap.'},
+    {n:12, par:3, yds:118, clubs:'9i', verified:false, text:'Smooth 9i to the center.'},
+    {n:13, par:4, yds:364, name:'Death Valley', clubs:'Dr → 7i/8i', verified:true, text:'Sizable forced carry off the tee, often into the wind. An arroyo runs the entire right side; aim left of the fairway bunkers you can barely see. Two-tier green with four bunkers; play to the correct tier. Usually plays over par, so bogey is fine.'},
+    {n:14, par:4, yds:339, name:'Gorge-ous', clubs:'7W/5W → wedge', verified:true, text:'Blind tee shot to a hidden, split fairway; the course recommends hybrid or long iron off the tee. Take the right fairway: it leaves a short approach. The inviting left fairway leaves a much longer shot back over a gorge. Green sits on a ledge fronted by a deep arroyo, so take enough club.'},
+    {n:15, par:5, yds:531, clubs:'Dr → 5i → 8i', verified:true, text:'Women’s #2 handicap. Arroyo down the entire right side, eight bunkers, and a grass hazard about 100 yds short of the green. Usually downwind. Stay left all the way, lay up short of the grass hazard, and play it as a three-shot hole.'},
+    {n:16, par:3, yds:160, clubs:'6i/5i', verified:false, text:'Center of the green.'},
+    {n:17, par:4, yds:390, clubs:'Dr → 6i/7i', verified:true, text:'Wide-open fairway and usually downwind. Swing freely with driver. Your best scoring chance on the back.'},
+    {n:18, par:4, yds:358, clubs:'Dr → 9i', verified:true, text:'Downwind, with a decent forced carry off the tee. Water is in play; locate it on the GPS before you hit, and take the club that keeps you away from it.'}
+  ]
+}, {
+  id: 'tpc-deere-run',
+  short: 'TPC Deere Run',
+  date: '2026-11-11T10:30',
+  course: 'TPC Deere Run',
+  location: 'Silvis, IL',
+  when: 'Wed Nov 11, 2026 · 10:30 AM (target)',
+  tee: 'White',
+  yards: 6017, par: 71, rating: 75.8, slope: 137,
+  rules: [
+    'Tree-lined parkland: fairway beats distance. Trees punish the right miss on 5, 6, 8 and 9.',
+    'Water: pond right on 10, water right on 11, Rock River left on 16, pond left on 18.',
+    'Club up on uphill shots (1, 3, 4, 17 approach); club down on downhill (2 tee, 14, 16).',
+    'November: cold air and soft turf. Yardages below are already trimmed ~2%; expect little roll.',
+    'Bogey is a good score on 5, 9, 15 and 18.'
+  ],
+  yardageTitle: 'Cold-weather yardages (est. total)',
+  yardageNote: 'LM1 range avg + 11% premium ball, minus ~2% for 50° temps. Adjust to your warm-up numbers.',
+  yardages: [['Dr','225'],['5W','180'],['7W','165'],['5i','155'],['6i','145'],['7i','140'],['8i','128'],['9i','118'],['PW','98'],['AW','85'],['54°','72']],
+  holes: [
+    {n:1, par:4, yds:344, clubs:'Dr → 8i', verified:true, text:'Dogleg left, uphill tee shot to a generous fairway ringed by bunkers. Aim at the left edge of the fairway; a fade still finishes in the short grass. Bunkered green among oaks; take one extra club for the uphill approach.'},
+    {n:2, par:5, yds:477, clubs:'Dr → 7W → 54°', verified:true, text:'Downhill tee shot to a fairway about 50 ft below, so it plays shorter. Tight green entrance guarded by wetland bunkers and trees, and a small green. Lay up to a full 54° rather than chasing it in two.'},
+    {n:3, par:3, yds:140, clubs:'6i/7i', verified:true, text:'Uphill, plays longer than the number. Bunkers right; a grass collection area long and left. Aim left-center: long-left is the safe miss, right is sand. Green runs front to back, so check the pin depth.'},
+    {n:4, par:4, yds:356, clubs:'Dr → 7i', verified:true, text:'A lone oak splits the landing area into two fairways. Bunkers left, trees right. Pick a side of the oak from the tee and commit. Green sits at one of the highest points on the course: club up, and miss short; left, right or long leaves a hard chip to a small green.'},
+    {n:5, par:4, yds:401, clubs:'Dr → 7W / lay up', verified:true, text:'Favor the left side off the tee; trees right block the second shot. Green sits behind a bunkered ravine with trees all around. From a good lie on the left, 7W to the center. Otherwise lay up short of the ravine to a full wedge.'},
+    {n:6, par:4, yds:310, clubs:'5W → 8i', verified:true, text:'Straight, carved through forest: the tightest hole on the course. Leave driver in the bag. Swale and bunkers in front of the green, collection area behind, and undulations. Carry it to the middle of the green.'},
+    {n:7, par:3, yds:170, clubs:'5W', verified:true, text:'Into the prevailing wind, so it plays longer. Tree-lined corridor, bunker right. Pros either carry it to the green or carry the right bunker and let it feed down. Aim left-center and take enough club to get there.'},
+    {n:8, par:4, yds:349, clubs:'5W → 7W', verified:true, text:'Tee shot through a chute of trees to a narrow fairway. Accuracy over distance: 5W in play beats driver in the trees. Small green surrounded by bunkers; a front tongue makes for a hard pin. Aim middle regardless of the flag.'},
+    {n:9, par:4, yds:410, clubs:'Dr → 5W / lay up', verified:true, text:'Longest par 4 on the front, level landing area. The second shot threads through trees to a long green with bunkers on both sides. If the gap isn’t clear, lay up and play for bogey.'},
+    {n:10, par:5, yds:487, clubs:'Dr → 6i → 9i', verified:true, text:'Length off the tee and second shot, not much tightness. Bunkers left, pond right: your fade brings the pond in, so start everything left-center. Very small green for a par 5; a full 9i gives you the best chance to hold it.'},
+    {n:11, par:4, yds:387, clubs:'Dr → 5i', verified:true, text:'Looks benign but the fairway is tree-lined. Demanding green on the edge of a ravine; a courtesy bunker right protects against water. Aim left-center on both shots; short and left is better than right.'},
+    {n:12, par:3, yds:158, clubs:'6i/5i', verified:true, text:'Long par 3 through trees. Large green, heavily bunkered with trouble all around. Center of the green, take the two-putt.'},
+    {n:13, par:4, yds:352, clubs:'Dr → 8i', verified:true, text:'One of the more forgiving holes. Fairway bunkers both sides. Large bunker right of the green, berm left; miss left on the approach.'},
+    {n:14, par:4, yds:301, clubs:'7W → 9i/PW', verified:true, text:'Downhill, drivable risk-reward hole. Miss left drops into a tightly mown “valley of sin” with a blind shot to a small green; long falls down a 60-ft bluff. Don’t take driver. Lay up with 7W and hit a full wedge in.'},
+    {n:15, par:4, yds:398, clubs:'Dr → 7W / lay up', verified:true, text:'Long, tight, and the toughest hole on the back. Long, narrow green guarded by sand and trees. Misses are costly: if you’re not in the fairway, lay up. Bogey is fine.'},
+    {n:16, par:3, yds:114, name:'Signature', clubs:'PW / 9i', verified:true, text:'On a bluff 40 ft above the Rock River. Deep ravine in front, large bunker right, river left. Downhill, plays a little shorter. Your fade toward the right bunker is the safe miss; never left. Make sure you carry the ravine: 9i if it’s into the wind.'},
+    {n:17, par:5, yds:481, clubs:'Dr → 6i → PW', verified:true, text:'Tight, tree-lined fairway: the tee shot has to be in position. Slightly elevated green with bunkers in front and collection areas all around. Club up one for the third and fly it past the front bunkers.'},
+    {n:18, par:4, yds:382, clubs:'Dr → 5i', verified:true, text:'Driving accuracy matters. Fairway bunker on the left; stay long and straight, on the left side. Deep, narrow green with two large bunkers right and a long, narrow pond left. Aim center-right on the approach: a bunker is better than the pond.'}
+  ]
+}];
+function courseHtml(g) {
+  return [g].map(g => {
+    const holeHtml = h => `
+      <div class="guide-hole">
+        <div class="guide-hole-head">
+          <span class="guide-hole-num">${h.n}</span>
+          ${h.name ? `<span class="guide-hole-name">${h.name}</span>` : ''}
+          <span class="guide-hole-stats">Par ${h.par} · ${h.yds} yds</span>
+          ${h.verified ? '' : '<span class="guide-flag">layout unverified</span>'}
+          <span class="guide-clubs">${h.clubs}</span>
+        </div>
+        <div class="guide-text">${h.text}</div>
+      </div>`;
+    const nine = (label, list) => {
+      const yds = list.reduce((a, h) => a + h.yds, 0);
+      const par = list.reduce((a, h) => a + h.par, 0);
+      return `<div class="card guide-nine">
+        <p class="card-title">${label} · Par ${par} · ${yds.toLocaleString()} yds</p>
+        ${list.map(holeHtml).join('')}
+      </div>`;
     };
-  }
-
-  const sig = latestDate + '|' + practiceMode;
-  const done = getPracticeDone(sig);
-  const blockIds = plan.map(p => p.club).concat(green ? ['putting'] : []);
-  const doneCount = blockIds.filter(id => done.includes(id)).length;
-
-  const row = (id, name, reason, qty) => {
-    const isDone = done.includes(id);
-    return '<label class="plan-row' + (isDone ? ' done' : '') + '"><div class="plan-club">'
-      + '<input type="checkbox"' + (isDone ? ' checked' : '') + ' onchange="togglePracticeItem(\'' + sig + '\', \'' + id + '\')">'
-      + '<span class="plan-club-name">' + name + '</span><span class="plan-reason">' + reason + '</span></div>'
-      + '<span class="plan-balls">' + qty + '</span></label>';
-  };
-
-  const modes = [['30', '30 min'], ['60', '60 min'], ['full', 'Full bucket']];
-  let out = '<div class="window-bar">'
-    + modes.map(m => '<button class="window-btn' + (practiceMode === m[0] ? ' active' : '') + '" onclick="setPracticeMode(\'' + m[0] + '\')">' + m[1] + '</button>').join('')
-    + '<span class="window-note">~' + budget + ' balls' + (puttMin ? ' + ' + puttMin + ' min putting' : '') + '</span></div>';
-
-  if (green) {
-    out += '<p style="font-size:12px;color:var(--muted);margin-bottom:6px">Last ' + green.n + ' rounds: getting to the green cost about '
-      + green.ttg + ' strokes a round, putting about ' + green.lost + ' (' + green.putts + ' putts a round, ' + green.three + ' three-putts total).</p>';
-  }
-  if (plan.length) {
-    out += '<p style="font-size:12px;color:var(--muted);margin-bottom:12px">Range priority: '
-      + (CLUB_ABBR[plan[0].club] || plan[0].club) + ' — ' + plan[0].tier.toLowerCase() + '.</p>';
-  }
-
-  let tier = null;
-  plan.forEach(p => {
-    if (p.tier !== tier) {
-      tier = p.tier;
-      out += '<p class="plan-tier-label">' + tier + '</p>';
-    }
-    out += row(p.club, CLUB_ABBR[p.club] || p.club, p.reason, p.balls + ' balls');
-  });
-  if (green) {
-    out += '<p class="plan-tier-label">Finish on the green — from your rounds</p>';
-    out += row('putting', 'Putting',
-      green.putts + ' putts a round and ' + green.three + ' three-putts across your last ' + green.n
-      + ' rounds. Try: lag putts from 30–40 ft into a 3-ft circle, then 10 straight makes from 3 ft.',
-      puttMin + ' min');
-  }
-
-  const used = plan.reduce((s,p) => s + p.balls, 0);
-  out += '<div class="plan-total"><span>' + doneCount + ' of ' + blockIds.length + ' blocks done'
-    + (doneCount ? ' · <a href="#" onclick="resetPractice(\'' + sig + '\'); return false;">reset</a>' : '')
-    + '</span><span>' + used + ' / ' + budget + ' balls</span></div>';
-  const covered = new Set(plan.map(p => p.club));
-  const skipped = FULL_BAG.filter(c => !covered.has(c));
-  if (skipped.length) {
-    out += '<p style="font-size:11px;color:var(--muted);margin-top:10px">Not in this bucket: '
-      + skipped.map(c => CLUB_ABBR[c] || c).join(', ') + '. Rotate these in next session.</p>';
-  }
-  el.innerHTML = out;
-}
-
-function render(rawData) {
-  fullData = rawData; // always keep the true full dataset so the toggle can re-slice without re-fetching
-
-  // Apply the session-window filter once, here, so every downstream consumer
-  // (KPIs, club table, charts, insights, practice plan) sees the same slice.
-  const allSessionsSorted = [...new Set(rawData.map(r => r.session_date))].sort();
-  let sessionsInWindow = allSessionsSorted;
-  if (sessionWindow !== 'all') {
-    const n = parseInt(sessionWindow, 10);
-    sessionsInWindow = allSessionsSorted.slice(-n);
-  }
-  const data = sessionWindow === 'all' ? rawData : rawData.filter(r => sessionsInWindow.includes(r.session_date));
-
-  const windowBar = document.getElementById('window-bar');
-  const windowNote = document.getElementById('window-note');
-  if (windowBar) {
-    windowBar.style.display = allSessionsSorted.length >= 2 ? 'flex' : 'none';
-    if (windowNote) {
-      windowNote.textContent = sessionWindow === 'all'
-        ? '(' + allSessionsSorted.length + ' sessions)'
-        : '(' + sessionsInWindow.length + ' of ' + allSessionsSorted.length + ' sessions, ' + sessionsInWindow[0] + ' to ' + sessionsInWindow[sessionsInWindow.length-1] + ')';
-    }
-  }
-
-  allData = data;
-  const byClub = groupByClub(data);
-
-  const clubs = Object.keys(byClub).sort((a,b) => {
-    const aLoft = CLUB_LOFT[a];
-    const bLoft = CLUB_LOFT[b];
-    if (aLoft !== undefined && bLoft !== undefined) return aLoft - bLoft;
-    // Fall back to bag order for any club with no known loft, so it still sorts
-    // sensibly instead of landing wherever Object.keys happened to put it.
-    const ai = CLUB_ORDER.indexOf(clubKey(a));
-    const bi = CLUB_ORDER.indexOf(clubKey(b));
-    if (aLoft === undefined && bLoft === undefined) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-    return aLoft === undefined ? 1 : -1;
-  });
-
-  const sessions = sessionsInWindow;
-
-  const lastRangeDate = sessions.length ? sessions[sessions.length-1] : null;
-  const lastRoundDate = ROUNDS.length ? [...ROUNDS].sort((a,b) => new Date(b.date) - new Date(a.date))[0].date : null;
-  const headerParts = [];
-  if (lastRangeDate) headerParts.push('Last range: ' + lastRangeDate);
-  if (lastRoundDate) headerParts.push('Last round: ' + lastRoundDate);
-  document.getElementById('last-updated').textContent = headerParts.join('  ·  ');
-
-  const totalShots = data.length;
-  const avgSmash = avg(data.map(r => parseFloat(r.smash_factor)).filter(Boolean));
-  const bestCarry = Math.max(...data.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean));
-  const driverRows = data.filter(r => (r.club_full || '').toLowerCase().includes('driver'));
-  const avgDriverCarry = driverRows.length ? Math.round(avg(driverRows.map(r => parseFloat(r.carry_distance_yards)))) : null;
-
-  // Shot-weighted expected smash: a pooled smash average is really a function of
-  // club mix, so compare it to the LPGA benchmark weighted by the same mix.
-  const smashRows = data.filter(r => parseFloat(r.smash_factor) && LPGA_BENCHMARKS[r.club_full || r.club]);
-  const expectedSmash = smashRows.length
-    ? avg(smashRows.map(r => LPGA_BENCHMARKS[r.club_full || r.club].smash))
-    : null;
-
-  // amber band = "close but behind"; red = meaningfully behind
-  const kpiColor = (val, bench, amberBand) => {
-    if (bench === null || bench === undefined) return 'var(--text)';
-    if (val >= bench) return 'var(--accent)';
-    if (val >= bench - amberBand) return 'var(--amber)';
-    return 'var(--danger)';
-  };
-  const signed = (n, unit) => (n >= 0 ? '+' : '') + n + (unit || '');
-
-  const smashColor = expectedSmash === null ? 'var(--text)' : kpiColor(avgSmash, expectedSmash, 0.06);
-  const smashSub = expectedSmash === null
-    ? 'all clubs'
-    : signed((Math.round((avgSmash - expectedSmash) * 100) / 100).toFixed(2)) + ' vs LPGA (mix-adjusted)';
-
-  const estDriverCarry = avgDriverCarry ? Math.round(avgDriverCarry * 1.11) : null;
-  const driverBench = LPGA_BENCHMARKS['Driver'].carry;
-  const driverColor = estDriverCarry ? kpiColor(estDriverCarry, driverBench, 20) : 'var(--text)';
-  const driverSub = estDriverCarry
-    ? '~' + estDriverCarry + ' est · ' + signed(estDriverCarry - driverBench) + ' vs LPGA'
-    : driverRows.length + ' shots';
-
-  document.getElementById('kpi-row').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Total shots</div><div class="kpi-value" style="color:var(--text)">${totalShots}</div><div class="kpi-sub">${sessions.length} session${sessions.length!==1?'s':''}</div></div>
-    <div class="kpi"><div class="kpi-label">Smash factor</div><div class="kpi-value" style="color:${smashColor}">${avgSmash.toFixed(2)}</div><div class="kpi-sub">${smashSub}</div></div>
-    <div class="kpi"><div class="kpi-label">Best carry</div><div class="kpi-value" style="color:var(--text)">${bestCarry}<span style="font-size:14px;color:var(--muted)"> yds</span></div><div class="kpi-sub">all time · no benchmark</div></div>
-    ${avgDriverCarry ? `<div class="kpi"><div class="kpi-label">Driver avg carry</div><div class="kpi-value" style="color:${driverColor}">${avgDriverCarry}<span style="font-size:14px;color:var(--muted)"> yds</span></div><div class="kpi-sub">${driverSub}</div></div>` : ''}
-  `;
-
-  const clubStats = clubs.map(club => {
-    const rows = byClub[club];
-    const carries = rows.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean);
-    const speeds = rows.map(r => parseFloat(r.club_speed_mph)).filter(Boolean);
-    const smashes = rows.map(r => parseFloat(r.smash_factor)).filter(Boolean);
-    const totals = rows.map(r => parseFloat(r.total_distance_yards)).filter(Boolean);
-    return {
-      club, count: rows.length,
-      avgCarry: Math.round(avg(carries)),
-      avgTotal: totals.length ? Math.round(avg(totals)) : null,
-      maxCarry: Math.max(...carries),
-      minCarry: Math.min(...carries),
-      spread: Math.round(Math.max(...carries) - Math.min(...carries)),
-      avgSpeed: Math.round(avg(speeds)),
-      avgSmash: avg(smashes)
-    };
-  });
-
-  document.getElementById('club-table-body').innerHTML = clubStats.map(s => {
-    const bench = SCRATCH_F_BENCHMARKS[s.club];
-    const lpga = LPGA_BENCHMARKS[s.club];
-    const carryGap = bench ? s.avgCarry - bench.carry : null;
-    const lpgaGap = lpga ? s.avgCarry - lpga.carry : null;
-    const hcp12 = HCP12_F_BENCHMARKS[s.club];
-    const hcp12Gap = hcp12 ? s.avgCarry - hcp12.carry : null;
-    const smashGap = bench ? s.avgSmash - bench.smash : null;
-    const gapBadge = (gap) => {
-      if (gap === null) return '<span style="color:var(--muted)">—</span>';
-      const sign = gap >= 0 ? '+' : '';
-      const color = gap >= -5 && gap <= 5 ? 'var(--amber)' : gap > 5 ? 'var(--accent)' : 'var(--danger)';
-      return '<span style="color:' + color + ';font-family:var(--font-mono);font-size:12px">' + sign + Math.round(gap) + ' yds</span>';
-    };
-    const smashGapBadge = (gap) => {
-      if (gap === null) return '<span style="color:var(--muted)">—</span>';
-      const sign = gap >= 0 ? '+' : '';
-      const color = gap >= 0 ? 'var(--accent)' : 'var(--danger)';
-      return '<span style="color:' + color + ';font-family:var(--font-mono);font-size:12px">' + sign + gap.toFixed(2) + '</span>';
-    };
-        const RANGE_BALL_FACTOR = 1.11; // ~11% adjustment for range ball vs Kirkland/premium ball
-    const estCarry = Math.round(s.avgCarry * RANGE_BALL_FACTOR);
-    const estCarryCell = '<span style="color:var(--accent2);font-family:var(--font-mono);font-size:12px">~' + estCarry + ' yds</span>';
-    const estTotal = s.avgTotal ? Math.round(s.avgTotal * RANGE_BALL_FACTOR) : null;
-    const estTotalCell = estTotal ? '<span style="color:var(--accent2);font-family:var(--font-mono);font-size:12px">~' + estTotal + ' yds</span>' : '<span style="color:var(--muted)">—</span>';
-
-    // Recalculate gaps using estimated carry for the benchmark columns
-    const estCarryGap = bench ? estCarry - bench.carry : null;
-    const estHcp12Gap = hcp12 ? estCarry - hcp12.carry : null;
-    const estLpgaGap = lpga ? estCarry - lpga.carry : null;
-
-    const loftCell = CLUB_LOFT[s.club] !== undefined ? '<span style="font-size:12px;color:var(--muted)">' + CLUB_LOFT[s.club] + '°</span>' : '<span style="color:var(--muted)">—</span>';
-    return '<tr><td>' + (CLUB_ABBR[s.club] || s.club) + '</td><td>' + loftCell + '</td><td style="color:var(--muted)">' + s.count + '</td><td><span style="font-size:12px">' + s.avgCarry + ' yds</span></td><td>' + (s.avgTotal ? '<span style="font-size:12px">' + s.avgTotal + ' yds</span>' : '<span style="color:var(--muted)">—</span>') + '</td><td>' + estCarryCell + '</td><td>' + estTotalCell + '</td><td>' + gapBadge(estHcp12Gap) + '</td><td>' + gapBadge(estCarryGap) + '</td><td>' + gapBadge(estLpgaGap) + '</td><td>' + spreadBadge(s.spread) + '</td><td>' + smashBadge(s.avgSmash) + '</td><td>' + smashGapBadge(smashGap) + '</td></tr>';
+    return `
+      <div class="round-card">
+        <div class="round-header">
+          <span class="round-course">${g.course}</span>
+          <span class="round-meta">${g.location} · ${g.when}</span>
+        </div>
+        <div class="guide-meta-row">
+          <div class="round-kpi"><div class="round-kpi-label">Tee</div><div class="round-kpi-value" style="font-size:14px">${g.tee}</div></div>
+          <div class="round-kpi"><div class="round-kpi-label">Yards</div><div class="round-kpi-value">${g.yards.toLocaleString()}</div></div>
+          <div class="round-kpi"><div class="round-kpi-label">Par</div><div class="round-kpi-value">${g.par}</div></div>
+          <div class="round-kpi"><div class="round-kpi-label">Rating / slope</div><div class="round-kpi-value">${g.rating}/${g.slope}</div></div>
+        </div>
+        <div class="card" style="margin-bottom:1rem">
+          <p class="card-title">Game plan</p>
+          <ul class="guide-rules">${g.rules.map(r => `<li>${r}</li>`).join('')}</ul>
+        </div>
+        <div class="card">
+          <p class="card-title">${g.yardageTitle || 'Vegas yardages (est. total)'}</p>
+          <div class="yardage-strip">${g.yardages.map(([c, y]) => `<div class="yardage-cell"><b>${c}</b><span>${y}</span></div>`).join('')}</div>
+          <p class="guide-note">${g.yardageNote || 'LM1 range avg + 11% premium ball + ~3% altitude. Adjust to your warm-up numbers.'}</p>
+        </div>
+        ${nine('Front nine', g.holes.slice(0, 9))}
+        ${nine('Back nine', g.holes.slice(9))}
+      </div>`;
   }).join('');
-
-  const chartDefaults = {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { ticks: { color: '#6b6f68', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
-      y: { ticks: { color: '#6b6f68', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } }
-    }
-  };
-
-  destroyChart('smash');
-  charts['smash'] = new Chart(document.getElementById('smash-chart'), {
-    type: 'bar',
-    data: {
-      labels: clubStats.map(s => s.club),
-      datasets: [{
-        data: clubStats.map(s => parseFloat(s.avgSmash.toFixed(2))),
-        backgroundColor: clubStats.map(s => s.avgSmash >= 1.30 ? '#006747cc' : s.avgSmash >= 1.20 ? '#b8860bcc' : '#c0392bcc'),
-        borderRadius: 4, borderSkipped: false,
-        label: 'Smash'
-      }]
-    },
-    options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ...chartDefaults.scales.y, min: 1.0, max: 1.5 } }, plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(2)} smash factor` } } } }
-  });
-
-  destroyChart('speed');
-  charts['speed'] = new Chart(document.getElementById('speed-chart'), {
-    type: 'bar',
-    data: {
-      labels: clubStats.map(s => s.club),
-      datasets: [{
-        data: clubStats.map(s => s.avgSpeed),
-        backgroundColor: '#1a6e42cc',
-        borderRadius: 4, borderSkipped: false,
-        label: 'Avg club speed'
-      }]
-    },
-    options: { ...chartDefaults, plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} mph` } } } }
-  });
-
-  destroyChart('spread');
-  charts['spread'] = new Chart(document.getElementById('spread-chart'), {
-    type: 'bar',
-    data: {
-      labels: clubStats.map(s => s.club),
-      datasets: [{
-        data: clubStats.map(s => s.spread),
-        backgroundColor: clubStats.map(s => s.spread <= 15 ? '#006747cc' : s.spread <= 25 ? '#b8860bcc' : '#c0392bcc'),
-        borderRadius: 4, borderSkipped: false,
-        label: 'Carry spread'
-      }]
-    },
-    options: { ...chartDefaults, plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} yd spread (tighter = better)` } } } }
-  });
-
-  if (sessions.length > 1) {
-    const trendDatasets = clubs.slice(0,6).map((club, i) => {
-      return {
-        label: club,
-        data: sessions.map(date => {
-          const rows = data.filter(r => r.session_date === date && r.club_full === club);
-          const carries = rows.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean);
-          return carries.length ? Math.round(avg(carries)) : null;
-        }),
-        borderColor: COLORS[i % COLORS.length],
-        backgroundColor: COLORS[i % COLORS.length] + '20',
-        tension: 0.3, pointRadius: 4, borderWidth: 2, spanGaps: true
-      };
-    });
-
-    document.getElementById('trend-legend').innerHTML = trendDatasets.map(d =>
-      `<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);font-family:var(--font-mono)"><span style="width:10px;height:10px;border-radius:2px;background:${d.borderColor};display:inline-block"></span>${d.label}</span>`
-    ).join('');
-
-    destroyChart('trend');
-    charts['trend'] = new Chart(document.getElementById('trend-chart'), {
-      type: 'line',
-      data: { labels: sessions, datasets: trendDatasets },
-      options: { ...chartDefaults, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} yds` } } } }
-    });
-  } else {
-    const trendEl = document.getElementById('trend-chart');
-    if (trendEl && trendEl.parentElement) {
-      trendEl.parentElement.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:1rem;text-align:center">Trend charts appear after 2+ sessions</p>';
-    }
-  }
-
-  if (sessions.length > 1) {
-    const speedTrendDatasets = clubs.slice(0,6).map((club, i) => {
-      return {
-        label: club,
-        data: sessions.map(date => {
-          const rows = data.filter(r => r.session_date === date && r.club_full === club);
-          const speeds = rows.map(r => parseFloat(r.club_speed_mph)).filter(Boolean);
-          return speeds.length ? Math.round(avg(speeds) * 10) / 10 : null;
-        }),
-        borderColor: COLORS[i % COLORS.length],
-        backgroundColor: COLORS[i % COLORS.length] + '20',
-        tension: 0.3, pointRadius: 4, borderWidth: 2, spanGaps: true
-      };
-    });
-
-    document.getElementById('speed-trend-legend').innerHTML = speedTrendDatasets.map(d =>
-      `<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);font-family:var(--font-mono)"><span style="width:10px;height:10px;border-radius:2px;background:${d.borderColor};display:inline-block"></span>${d.label}</span>`
-    ).join('');
-
-    destroyChart('speedtrend');
-    charts['speedtrend'] = new Chart(document.getElementById('speed-trend-chart'), {
-      type: 'line',
-      data: { labels: sessions, datasets: speedTrendDatasets },
-      options: { ...chartDefaults, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} mph` } } } }
-    });
-  } else {
-    const speedTrendEl = document.getElementById('speed-trend-chart');
-    if (speedTrendEl && speedTrendEl.parentElement) {
-      speedTrendEl.parentElement.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:1rem;text-align:center">Trend charts appear after 2+ sessions</p>';
-    }
-  }
-
-  // Club speed benchmark table
-  const speedClubs = clubStats.filter(s => SPEED_BENCHMARKS[s.club] && s.avgSpeed);
-  const speedGapBadge = (gap) => {
-    if (gap === null) return '<span style="color:var(--muted)">—</span>';
-    const sign = gap >= 0 ? '+' : '';
-    const color = gap >= 0 ? 'var(--accent)' : (gap >= -5 ? 'var(--amber)' : 'var(--danger)');
-    return '<span style="color:' + color + ';font-family:var(--font-mono);font-size:12px">' + sign + Math.round(gap) + '</span>';
-  };
-
-  document.getElementById('speed-table-body').innerHTML = speedClubs.map(s => {
-    const b = SPEED_BENCHMARKS[s.club];
-    return '<tr>' +
-      '<td>' + (CLUB_ABBR[s.club] || s.club) + '</td>' +
-      '<td>' + s.avgSpeed + ' mph</td>' +
-      '<td style="color:var(--muted)">' + b.hcp12 + '</td>' +
-      '<td>' + speedGapBadge(s.avgSpeed - b.hcp12) + '</td>' +
-      '<td style="color:var(--muted)">' + b.scratch + '</td>' +
-      '<td>' + speedGapBadge(s.avgSpeed - b.scratch) + '</td>' +
-      '<td style="color:var(--muted)">' + b.lpga + '</td>' +
-      '<td>' + speedGapBadge(s.avgSpeed - b.lpga) + '</td>' +
-      '</tr>';
-  }).join('');
-
-  // Speed gap vs scratch chart
-  const speedGapValues = speedClubs.map(s => s.avgSpeed - SPEED_BENCHMARKS[s.club].scratch);
-  destroyChart('speedgap');
-  charts['speedgap'] = new Chart(document.getElementById('speed-gap-chart'), {
-    type: 'bar',
-    data: {
-      labels: speedClubs.map(s => CLUB_ABBR[s.club] || s.club),
-      datasets: [{
-        data: speedGapValues,
-        backgroundColor: speedGapValues.map(v => v >= 0 ? '#006747cc' : '#c0392bcc'),
-        borderRadius: 4, borderSkipped: false,
-        label: 'Speed gap vs scratch'
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => {
-        const v = ctx.parsed.y;
-        return ' ' + (v >= 0 ? '+' : '') + Math.round(v) + ' mph vs female scratch';
-      }}}},
-      scales: {
-        x: { ticks: { color: '#6b6f68', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
-        y: { ticks: { color: '#6b6f68', font: { size: 11 }, callback: v => (v >= 0 ? '+' : '') + v }, grid: { color: 'rgba(0,0,0,0.06)' } }
-      }
-    }
-  });
-
-  // Gap vs SCR female benchmark chart
-  const gapClubs = clubStats.filter(s => SCRATCH_F_BENCHMARKS[s.club]);
-  const gapValues = gapClubs.map(s => s.avgCarry - SCRATCH_F_BENCHMARKS[s.club].carry);
-
-  destroyChart('gap');
-  charts['gap'] = new Chart(document.getElementById('gap-chart'), {
-    type: 'bar',
-    data: {
-      labels: gapClubs.map(s => s.club),
-      datasets: [{
-        data: gapValues,
-        backgroundColor: gapValues.map(v => v >= 0 ? '#006747cc' : '#c0392bcc'),
-        borderRadius: 4, borderSkipped: false,
-        label: 'Gap vs female scratch carry'
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => {
-        const v = ctx.parsed.y;
-        const sign = v >= 0 ? '+' : '';
-        return ` ${sign}${Math.round(v)} yds vs female scratch`;
-      }}}},
-      scales: {
-        x: { ticks: { color: '#6b6f68', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
-        y: { ticks: { color: '#6b6f68', font: { size: 11 }, callback: v => (v >= 0 ? '+' : '') + v + ' y' }, grid: { color: 'rgba(0,0,0,0.06)' }, border: { dash: [4,4] } }
-      }
-    }
-  });
-
-  const insights = [];
-  const MIN_SHOTS = 5;   // carry / dispersion need a real sample
-  const MIN_SPEED = 3;   // club speed is stable enough to read from fewer
-  const noBaseline = [];
-
-  const rowsFor = (club, dates) =>
-    data.filter(r => (r.club_full || r.club) === club && dates.includes(r.session_date));
-  const statBlock = (rows) => {
-    const carries = rows.map(r => parseFloat(r.carry_distance_yards)).filter(Boolean);
-    const speeds  = rows.map(r => parseFloat(r.club_speed_mph)).filter(Boolean);
-    if (!carries.length) return null;
-    return {
-      n: rows.length,
-      carry: Math.round(avg(carries)),
-      spread: Math.round(Math.max(...carries) - Math.min(...carries)),
-      speed: speeds.length ? Math.round(avg(speeds) * 10) / 10 : null
-    };
-  };
-
-  const latestDate = sessions[sessions.length - 1];
-  const priorDates = sessions.slice(0, -1);
-  const latestRows = data.filter(r => r.session_date === latestDate);
-
-  // Compare the latest session to everything logged before it, per club.
-  const deltas = [];
-  const thinClubs = [];
-  [...new Set(latestRows.map(r => r.club_full || r.club))].forEach(club => {
-    const L = statBlock(rowsFor(club, [latestDate]));
-    if (!L) return;
-    const P = priorDates.length ? statBlock(rowsFor(club, priorDates)) : null;
-    if (!P) { noBaseline.push({ club, n: L.n }); return; }
-    // Club speed is a direct measurement with low within-club variance, so it can be
-    // read from fewer shots than carry, which a single mishit distorts heavily.
-    const speedOK = L.n >= MIN_SPEED && P.n >= MIN_SPEED;
-    const carryOK = L.n >= MIN_SHOTS && P.n >= MIN_SHOTS;
-    if (!speedOK && !carryOK) { thinClubs.push({ club, n: L.n }); return; }
-    deltas.push({
-      club, label: CLUB_ABBR[club] || club, L, P, carryOK,
-      dSpeed: speedOK && L.speed !== null && P.speed !== null ? Math.round((L.speed - P.speed) * 10) / 10 : null,
-      dCarry: carryOK ? L.carry - P.carry : null,
-      dSpread: carryOK ? L.spread - P.spread : null
-    });
-  });
-
-  // ---------- HEADLINE: cross-club speed pattern ----------
-  const spd = deltas.filter(d => d.dSpeed !== null && Math.abs(d.dSpeed) >= 1);
-  if (spd.length >= 3) {
-    const down = spd.filter(d => d.dSpeed < 0);
-    const up   = spd.filter(d => d.dSpeed > 0);
-    const dom  = down.length >= up.length ? down : up;
-    if (dom.length / spd.length >= 0.7) {
-      const dir = dom === down ? 'down' : 'up';
-      const mean = Math.round((avg(dom.map(d => Math.abs(d.dSpeed)))) * 10) / 10;
-      const tightening = deltas.filter(d => d.dSpread !== null && d.dSpread <= -8).length;
-      let txt = 'Club speed is ' + dir + ' across the board — ' + dom.length + ' of ' + spd.length
-              + ' clubs, averaging ' + mean + ' mph, vs your earlier sessions.';
-      if (dir === 'down' && tightening >= 1) {
-        txt += ' Dispersion tightened on ' + tightening + ' club' + (tightening > 1 ? 's' : '')
-             + ' at the same time — that pairing usually means swinging more within yourself, though fatigue looks the same in the data.';
-      }
-      insights.push({ group: 'Headline', color: dir === 'down' ? '#b8860b' : '#006747', text: txt });
-    }
-  }
-
-  // ---------- IMPROVING ----------
-  deltas.filter(d => d.dSpread !== null && d.dSpread <= -10).sort((a,b) => a.dSpread - b.dSpread).forEach(d => {
-    insights.push({ group: 'Improving', color: '#006747',
-      text: d.label + ' dispersion tightened ' + Math.abs(d.dSpread) + ' yds (' + d.P.spread + ' to ' + d.L.spread
-          + ' yd spread) while carry held at ' + d.L.carry + ' yds. Same distance, far more repeatable.' });
-  });
-  deltas.filter(d => d.dCarry !== null && d.dCarry >= 6 && d.dSpread > -10).forEach(d => {
-    insights.push({ group: 'Improving', color: '#006747',
-      text: d.label + ' carry up ' + d.dCarry + ' yds (' + d.P.carry + ' to ' + d.L.carry + ')'
-          + (d.dSpeed > 0 ? ', with club speed up ' + d.dSpeed + ' mph.' : '.') });
-  });
-
-  // ---------- WATCH ----------
-  deltas.filter(d => d.dSpread !== null && d.dSpread >= 12).sort((a,b) => b.dSpread - a.dSpread).forEach(d => {
-    insights.push({ group: 'Watch', color: '#c0392b',
-      text: d.label + ' dispersion widened ' + d.dSpread + ' yds (' + d.P.spread + ' to ' + d.L.spread + '). Check for a few outlier strikes rather than a general decline.' });
-  });
-  const worst = [...latestRows.reduce((m, r) => {
-    const c = r.club_full || r.club; (m.get(c) || m.set(c, []).get(c)).push(r); return m;
-  }, new Map())].map(([club, rows]) => ({ club, ...statBlock(rows) }))
-   .filter(x => x.n >= MIN_SHOTS && x.spread > 30)
-   .sort((a,b) => b.spread - a.spread)[0];
-  if (worst && !deltas.some(d => d.club === worst.club && d.dSpread >= 12)) {
-    insights.push({ group: 'Watch', color: '#b8860b',
-      text: (CLUB_ABBR[worst.club] || worst.club) + ' was your loosest club on ' + latestDate
-          + ' — ' + worst.spread + ' yd spread over ' + worst.n + ' shots. Biggest single scoring opportunity.' });
-  }
-
-  // ---------- TOO EARLY ----------
-  if (noBaseline.length) {
-    const names = noBaseline.map(t => (CLUB_ABBR[t.club] || t.club) + ' (' + t.n + ')').join(', ');
-    insights.push({ group: 'Too early to say', color: '#6b6f68',
-      text: names + ' — first session logged for ' + (noBaseline.length > 1 ? 'these clubs' : 'this club')
-          + ', so there is nothing to compare against yet. Baseline set.' });
-  }
-  if (thinClubs.length) {
-    const names = thinClubs.map(t => (CLUB_ABBR[t.club] || t.club) + ' (' + t.n + ')').join(', ');
-    insights.push({ group: 'Too early to say', color: '#6b6f68',
-      text: names + ' — too few shots to read a trend. Treat any change on these as noise.' });
-  }
-
-  if (!insights.length) insights.push({ group: 'Context', color: '#1a6e42',
-    text: 'Log another session to unlock session-over-session pattern detection.' });
-
-  document.getElementById('insights').innerHTML = (() => {
-    let out = '', seen = null;
-    insights.slice(0, 10).forEach(ins => {
-      if (ins.group && ins.group !== seen) {
-        seen = ins.group;
-        out += '<p style="font-size:10px;font-family:var(--font-mono);color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin:10px 0 2px">' + ins.group + '</p>';
-      }
-      out += '<div class="insight"><div class="insight-dot" style="background:' + ins.color + '"></div><span style="color:var(--muted)">' + ins.text + '</span></div>';
-    });
-    return out;
-  })();
-
-  document.getElementById('session-list').innerHTML = sessions.slice().reverse().slice(0,8).map(date => {
-    const shots = data.filter(r => r.session_date === date).length;
-    const clubs = [...new Set(data.filter(r => r.session_date === date).map(r => r.club_full || r.club))];
-    return `<div class="session-row"><span class="session-date">${date}</span><span class="session-shots">${shots} shots · ${clubs.length} clubs</span></div>`;
-  }).join('');
-
-  renderPractice();
-
-  // ---------- On-course rounds ----------
-  // Standard scorecard marks: circle = birdie, double circle = eagle+,
-  // square = bogey, double square = double bogey or worse, no mark = par.
-  const scoreMark = (strokes, par) => {
-    const diff = strokes - par;
-    let cls = '';
-    if (diff <= -2) cls = 'score-eagle';
-    else if (diff === -1) cls = 'score-birdie';
-    else if (diff === 1) cls = 'score-bogey';
-    else if (diff >= 2) cls = 'score-double';
-    else cls = 'score-par';
-    return '<span class="score-mark ' + cls + '">' + strokes + '</span>';
-  };
-
-  // ---------- Rounds tab: key insights ----------
-  // Model: par-3 baseline putts = 2, par-4/5 baseline = 2. "Extra putts" beyond that
-  // baseline is the putting-strokes-lost estimate. Everything else lost to par on a
-  // hole is attributed to the tee-to-green game. Comparing the two totals tells you
-  // which half of the game is actually costing more strokes right now.
-  const roundSummary = (round) => {
-    const totalPar = round.holes.reduce((s,h) => s + h.par, 0);
-    const totalStrokes = round.holes.reduce((s,h) => s + h.strokes, 0);
-    const totalPutts = round.holes.reduce((s,h) => s + h.putts, 0);
-    const gir = round.holes.filter(h => (h.strokes - h.putts) <= (h.par - 2)).length;
-    const threePutts = round.holes.filter(h => h.putts >= 3).length;
-    const puttingLost = round.holes.reduce((s,h) => s + Math.max(0, h.putts - 2), 0);
-    const teeToGreenLost = (totalStrokes - totalPar) - puttingLost;
-    const worstHole = [...round.holes].sort((a,b) => (b.strokes-b.par) - (a.strokes-a.par))[0];
-    return { round, totalPar, totalStrokes, toPar: totalStrokes - totalPar, totalPutts, gir,
-      threePutts, puttingLost, teeToGreenLost, worstHole };
-  };
-
-  const roundInsights = [];
-  if (ROUNDS.length) {
-    const sortedRounds = [...ROUNDS].sort((a,b) => new Date(a.date) - new Date(b.date));
-    const summaries = sortedRounds.map(roundSummary);
-    const latest = summaries[summaries.length - 1];
-    const prior = summaries.slice(0, -1);
-    const cumLabel = 'Cumulative — ' + summaries.length + ' round' + (summaries.length > 1 ? 's' : '');
-    const latestLabel = 'Latest round — ' + latest.round.course;
-
-    // --- Cumulative: which half of the game is actually costing more strokes ---
-    const totalPuttingLost = summaries.reduce((s,x) => s + x.puttingLost, 0);
-    const totalTeeToGreenLost = summaries.reduce((s,x) => s + x.teeToGreenLost, 0);
-    const avgToPar = Math.round(avg(summaries.map(s => s.toPar)) * 10) / 10;
-    const totalThreePutts = summaries.reduce((s,x) => s + x.threePutts, 0);
-    const totalHoles = summaries.length * 18;
-
-    const biggerLeak = totalPuttingLost >= totalTeeToGreenLost ? 'putting' : 'tee-to-green';
-    const leakShare = Math.round(100 * Math.max(totalPuttingLost, totalTeeToGreenLost)
-      / Math.max(1, totalPuttingLost + totalTeeToGreenLost));
-
-    roundInsights.push({ group: cumLabel, color: '#1a6e42',
-      text: 'Averaging ' + (avgToPar>=0?'+':'') + avgToPar + ' to par across ' + summaries.length + ' rounds. Of the strokes lost to par, ~'
-          + Math.round(totalPuttingLost / summaries.length * 10) / 10 + '/round come from putting and ~'
-          + Math.round(totalTeeToGreenLost / summaries.length * 10) / 10 + '/round from tee-to-green.' });
-
-    roundInsights.push({ group: cumLabel, color: biggerLeak === 'putting' ? '#c0392b' : '#b8860b',
-      text: (biggerLeak === 'putting' ? 'Putting' : 'Tee-to-green play') + ' is the bigger leak right now, responsible for ~'
-          + leakShare + '% of strokes lost to par. ' + totalThreePutts + ' three-putts across ' + totalHoles + ' holes logged — '
-          + (biggerLeak === 'putting'
-             ? 'this is the highest-leverage practice target: work speed control on lag putts (30ft+) before line-reading, since three-putts are almost always a distance problem first.'
-             : 'ball-striking and approach shots are costing more than the putter. Focus range time on the clubs with the widest dispersion rather than putting drills.') });
-
-    if (summaries.length >= 2) {
-      const girTrend = latest.gir - avg(prior.map(s => s.gir));
-      if (girTrend <= -3) {
-        roundInsights.push({ group: cumLabel, color: '#b8860b',
-          text: 'GIR dropped ' + Math.abs(Math.round(girTrend)) + ' holes vs your ' + prior.length + '-round average ('
-              + Math.round(avg(prior.map(s=>s.gir))*10)/10 + ' → ' + latest.gir + '). If ball-striking felt off, check tempo and setup before the next range session rather than assuming it is a swing-mechanics regression from one bad day.' });
-      } else if (girTrend >= 3) {
-        roundInsights.push({ group: cumLabel, color: '#006747',
-          text: 'GIR jumped ' + Math.round(girTrend) + ' holes vs your ' + prior.length + '-round average ('
-              + Math.round(avg(prior.map(s=>s.gir))*10)/10 + ' → ' + latest.gir + '). Worth noting what felt different in warmup or swing thoughts so it is repeatable.' });
-      }
-    }
-
-    // --- Latest round: diagnose the single biggest scoring impact and suggest a fix ---
-    const l = latest;
-    if (l.puttingLost >= l.teeToGreenLost && l.puttingLost >= 3) {
-      roundInsights.push({ group: latestLabel, color: '#c0392b',
-        text: 'Putting cost you an estimated ' + l.puttingLost + ' strokes this round (' + l.threePutts + ' three-putts), vs ~'
-            + l.teeToGreenLost + ' lost tee-to-green. The putter was the bigger factor in this score'
-            + (l.gir >= 8 ? ' — approach play was solid (' + l.gir + '/18 GIR), so the strokes are being given back on the green.' : '.')
-            + ' Suggested focus: a lag-putting ladder drill (increasing distances, target a 3ft circle) to cut three-putts before working on short putts.' });
-    } else if (l.teeToGreenLost > l.puttingLost && l.gir <= 6) {
-      roundInsights.push({ group: latestLabel, color: '#c0392b',
-        text: 'Tee-to-green play cost you an estimated ' + l.teeToGreenLost + ' strokes this round vs ~' + l.puttingLost
-            + ' lost putting. Only ' + l.gir + '/18 greens hit — approach shots and ball-striking are the bigger leak here. '
-            + 'Suggested focus: check the Range tab for which club has the widest recent dispersion and prioritize it next session.' });
-    }
-
-    if (l.worstHole.strokes - l.worstHole.par >= 2) {
-      const wh = l.worstHole;
-      const whPutting = wh.putts >= 3;
-      roundInsights.push({ group: latestLabel, color: '#b8860b',
-        text: 'Hole ' + wh.hole + ' (par ' + wh.par + ') was the worst of the round at ' + wh.strokes + ' strokes. '
-            + (whPutting
-               ? 'That hole alone had ' + wh.putts + ' putts — a three-putt on a blow-up hole compounds the damage. Worth a two-putt-max mindset once you are already in trouble off the tee or approach.'
-               : 'The damage came before the green, not on it — a mis-hit tee shot or approach is the more likely root cause on this one.') });
-    }
-  } else {
-    roundInsights.push({ group: 'Context', color: '#1a6e42', text: 'Log a round to unlock insights here.' });
-  }
-
-  document.getElementById('round-insights').innerHTML = (() => {
-    let out = '', seen = null;
-    roundInsights.forEach(ins => {
-      if (ins.group !== seen) {
-        seen = ins.group;
-        out += '<p style="font-size:10px;font-family:var(--font-mono);color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin:10px 0 2px">' + ins.group + '</p>';
-      }
-      out += '<div class="insight"><div class="insight-dot" style="background:' + ins.color + '"></div><span style="color:var(--muted)">' + ins.text + '</span></div>';
-    });
-    return out;
-  })();
-
-  document.getElementById('rounds-container').innerHTML = [...ROUNDS].sort((a,b) => new Date(b.date) - new Date(a.date)).map(round => {
-    const totalPar = round.holes.reduce((s,h) => s + h.par, 0);
-    const totalStrokes = round.holes.reduce((s,h) => s + h.strokes, 0);
-    const totalPutts = round.holes.reduce((s,h) => s + h.putts, 0);
-    const girCount = round.holes.filter(h => (h.strokes - h.putts) <= (h.par - 2)).length;
-    const front = round.holes.slice(0,9), back = round.holes.slice(9,18);
-    const frontStrokes = front.reduce((s,h)=>s+h.strokes,0), frontPar = front.reduce((s,h)=>s+h.par,0);
-    const backStrokes = back.reduce((s,h)=>s+h.strokes,0), backPar = back.reduce((s,h)=>s+h.par,0);
-    const toPar = totalStrokes - totalPar;
-
-    const holeRow = (label, key, holes) => '<tr><td>' + label + '</td>' +
-      holes.map(h => '<td>'
-        + (key==='strokes' ? scoreMark(h.strokes, h.par)
-           : key==='gir' ? ((h.strokes - h.putts) <= (h.par - 2) ? '<span class="hole-gir">●</span>' : '')
-           : h[key])
-        + '</td>').join('') + '</tr>';
-
-    // Color each KPI by what it actually means, not a flat accent.
-    // Score: relative to par. Putts: 2/hole (36) is average; below is good, well above is a concern.
-    // GIR: any real GIR is a positive signal at this stage of the handicap journey.
-    const scoreColor = toPar <= 5 ? 'var(--accent)' : toPar <= 15 ? 'var(--amber)' : 'var(--danger)';
-    const puttsColor = totalPutts <= 32 ? 'var(--accent)' : totalPutts <= 38 ? 'var(--amber)' : 'var(--danger)';
-    const girColor = girCount >= 9 ? 'var(--accent)' : girCount >= 4 ? 'var(--amber)' : 'var(--danger)';
-
-    return '<div class="card round-card">' +
-      '<div class="round-header"><span class="round-course">' + round.course + '</span>' +
-      '<span class="round-meta">' + round.tees + (round.yardage ? ' · ' + round.yardage.toLocaleString() + ' yds' : '') + (round.courseRating ? ' · CR ' + round.courseRating + '/' + round.slope : '') + '</span></div>' +
-      '<div class="round-meta" style="margin-bottom:8px">' + round.date + (round.location ? ' · ' + round.location : '') + '</div>' +
-      '<div class="round-kpis">' +
-        '<div class="round-kpi"><div class="round-kpi-label">Score</div><div class="round-kpi-value" style="color:' + scoreColor + '">' + totalStrokes + ' (' + (toPar>=0?'+':'') + toPar + ')</div></div>' +
-        '<div class="round-kpi"><div class="round-kpi-label">Front / Back</div><div class="round-kpi-value" style="font-size:14px;color:var(--text)">' + frontStrokes + ' / ' + backStrokes + '</div></div>' +
-        '<div class="round-kpi"><div class="round-kpi-label">Putts</div><div class="round-kpi-value" style="color:' + puttsColor + '">' + totalPutts + '</div></div>' +
-        '<div class="round-kpi"><div class="round-kpi-label">GIR</div><div class="round-kpi-value" style="color:' + girColor + '">' + girCount + '/18</div></div>' +
-      '</div>' +
-      '<div style="overflow-x:auto"><table class="hole-table">' +
-        '<thead><tr><th>Hole</th>' + round.holes.map(h=>'<th>'+h.hole+'</th>').join('') + '</tr></thead>' +
-        '<tbody>' +
-          '<tr><td>Par</td>' + round.holes.map(h=>'<td>'+h.par+'</td>').join('') + '</tr>' +
-          holeRow('Score','strokes', round.holes) +
-          holeRow('Putts','putts', round.holes) +
-          holeRow('GIR','gir', round.holes) +
-        '</tbody>' +
-      '</table></div>' +
-      '<p style="font-size:10px;color:var(--muted);margin-top:8px">Front ' + frontStrokes + ' (par ' + frontPar + ') · Back ' + backStrokes + ' (par ' + backPar + ')</p>' +
-    '</div>';
-  }).join('');
-
-  document.getElementById('content').style.display = 'block';
 }
 
-async function loadFromSheet() {
-  const url = SHEET_URL;
-  document.getElementById('status').textContent = 'loading…';
-  document.getElementById('loading').style.display = 'block';
-  document.getElementById('content').style.display = 'none';
-  document.getElementById('error-msg').style.display = 'none';
-  try {
-    const bust = (url.includes('?') ? '&' : '?') + 'cb=' + Date.now();
-    const resp = await fetch(url + bust, { cache: 'no-store' });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const text = await resp.text();
-    const data = parseCSV(text);
-    if (!data.length || !data[0].carry_distance_yards) throw new Error('CSV missing expected columns. Check your sheet format.');
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('status').textContent = `✓ ${data.length} shots loaded`;
-    const savedWindow = localStorage.getItem('golf_session_window');
-    if (savedWindow) sessionWindow = savedWindow;
-    document.querySelectorAll('.window-btn').forEach(b => b.classList.toggle('active', b.dataset.window === sessionWindow));
-    render(data);
-  } catch(e) {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('status').textContent = '';
-    const err = document.getElementById('error-msg');
-    err.style.display = 'block';
-    err.textContent = `Error loading data: ${e.message}`;
-  }
+
+
+function pickDefault() {
+  const fromHash = location.hash.slice(1);
+  if (COURSE_GUIDES.some(g => g.id === fromHash)) return fromHash;
+  const now = new Date();
+  // Next round that hasn't started yet (with a 6-hour grace window during the round)
+  const upcoming = COURSE_GUIDES
+    .filter(g => new Date(g.date).getTime() + 6 * 3600e3 > now.getTime())
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  return (upcoming[0] || COURSE_GUIDES[COURSE_GUIDES.length - 1]).id;
 }
 
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  localStorage.setItem('golf_dashboard_tab', tab);
+function showCourse(id) {
+  const g = COURSE_GUIDES.find(c => c.id === id);
+  document.getElementById('guides-container').innerHTML = courseHtml(g);
+  document.getElementById('header-sub').textContent = g.short + ' · ' + g.tee + ' tees';
+  document.title = g.short + ' · Course Guide';
+  document.getElementById('course-select').value = id;
+  if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  loadFromSheet();
-  let savedTab = null;
-  try { savedTab = localStorage.getItem('golf_dashboard_tab'); } catch (e) {}
-  if (!savedTab && window.matchMedia('(max-width: 600px)').matches) savedTab = 'practice';
-  if (savedTab && document.getElementById('tab-' + savedTab)) switchTab(savedTab);
+function renderTabs() {
+  const now = Date.now();
+  const sorted = [...COURSE_GUIDES].sort((a, b) => new Date(a.date) - new Date(b.date));
+  document.getElementById('course-select').innerHTML = sorted.map(g => {
+    const d = new Date(g.date);
+    const played = d.getTime() + 6 * 3600e3 < now ? ' (played)' : '';
+    return `<option value="${g.id}">${g.short}${played}</option>`;
+  }).join('');
+}
+
+renderTabs();
+showCourse(pickDefault());
+window.addEventListener('hashchange', () => {
+  const id = location.hash.slice(1);
+  if (COURSE_GUIDES.some(g => g.id === id)) showCourse(id);
 });
 </script>
 </body>
